@@ -33,6 +33,7 @@ object Form1: TForm1
         Height = 532
         Align = alClient
         TabOrder = 0
+        Silent = False
         OnBeforeNavigate2 = ewbMainBeforeNavigate2
         OnNavigateComplete2 = ewbMainNavigateComplete2
         DisableCtrlShortcuts = 'N'

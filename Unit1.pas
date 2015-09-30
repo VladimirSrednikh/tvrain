@@ -92,20 +92,23 @@ var
   ts: TTabSheet;
   frm: TfrmWebTab;
 begin
+  if StartsText('about:blank', URL) or StartsText('https://googleads.g', URL)  then
+    Exit;
+
   OutputDebugString(PChar('BeforeNavigate2: ' + string(URL)));
-  if (tsMain.Tag = 0) and (
-    StartsText('http://tvrain.ru', URL) or StartsText('https://tvrain.ru', URL)) then
-  begin
-    Cancel := True;
-    ts := TTabSheet.Create(Self);
-    ts.PageControl := pgcPages;
-    pgcPages.ActivePage := ts;
-    frm := TfrmWebTab.Create(Self);
-    frm.Name := '';
-    frm.Parent := ts;
-    frm.Align := alClient;
-    frm.Navigate(URL);
-  end;
+  if not (StartsText('http://tvrain.ru/archive/', URL) or StartsText('https://tvrain.ru/archive/', URL)) then
+    if StartsText('https://tvrain.ru/', URL) then
+    begin
+      Cancel := True;
+      ts := TTabSheet.Create(Self);
+      ts.PageControl := pgcPages;
+      pgcPages.ActivePage := ts;
+      frm := TfrmWebTab.Create(Self);
+      frm.Name := '';
+      frm.Parent := ts;
+      frm.Align := alClient;
+      frm.Navigate(URL);
+    end;
 end;
 
 procedure TForm1.ewbMainNavigateComplete2(ASender: TObject;
@@ -194,14 +197,17 @@ begin
       Exit;
     end;
   Result := nil;
-//  OutputDebugString(PChar('FindNodeByAttrEx: ' + NodeName + '_' +  AttrName + '_' +  AttrValue + ' in ' +  ANode.tagName + ':' + ANode.classname));
+//  OutputDebugString(PChar(
+//    Format('FindNodeByAttrEx: %s _ %s _ %s in  %s id = %s, class = %s ',
+//    [NodeName,  AttrName,  AttrValue,
+//      ANode.tagName, ANode.id,  ANode.classname])));
   if Sametext(ANode.tagName, NodeName) then
   begin
     if AttrName.IsEmpty then
       Result := ANode
     else if SameText(AttrName, 'class') then
     begin
-      if SameText(ANode.classname, AttrValue) then
+      if StartsText(AttrValue, ANode.classname) then
         Result := ANode;
     end
     else // для иных атрибутов
@@ -228,7 +234,6 @@ begin
   tsMain.Tag := 1;
   ewbMain.Navigate('http://tvrain.ru/archive/?tab=Video');
 //  chrm1.Browser.MainFrame.LoadUrl('http://tvrain.ru/teleshow/here_and_now/alkogol_budet_deshevle-393275/');
-//  ewbMain.Navigate('http://tvrain.ru/teleshow/here_and_now/alkogol_budet_deshevle-393275/');
 end;
 
 procedure TForm1.FormDestroy(Sender: TObject);
@@ -296,11 +301,14 @@ begin
     for I := 0 to (node.children as IHTMLElementCollection).length - 1 do
     begin
       child := (node.children as IHTMLElementCollection).item(I, 0) as IHTMLElement;
-      attr := child.getAttribute('data-id', 0);
-      if attr <> 0 then
+      if SameText(child.tagName, 'div') and StartsText('eagle-player-series', child.className) then
       begin
-        SetLength(AEagleList, Length(AEagleList) + 1);
-        AEagleList[Length(AEagleList) - 1] := attr;
+        attr := child.getAttribute('data-id', 0);
+        if not VarIsNull(attr) then
+        begin
+          SetLength(AEagleList, Length(AEagleList) + 1);
+          AEagleList[Length(AEagleList) - 1] := attr;
+        end;
       end;
     end;
   end
@@ -453,15 +461,23 @@ end;
 procedure TForm1.tmr1Timer(Sender: TObject);
 var
   i: Integer;
+  found: Boolean;
 begin
   pbCount.Max := DownloadList.Count;
+  found := False;
   for I := DownloadList.Count - 1 downto 0 do
     if not (DownloadList.Items[I] as TTaskItem).SuccessDownloaded then
     begin
       pbCount.Position := I;
       pbProgressCurrent.Max := (DownloadList.Items[I] as TTaskItem).FPlayList.TrackCount;
       pbProgressCurrent.Position := (DownloadList.Items[I] as TTaskItem).FCurrentFile;
+      found := True;
     end;
+  if not found then
+  begin
+    pbCount.Position := 0;
+    pbProgressCurrent.Position := 0;
+  end;
 end;
 
 end.

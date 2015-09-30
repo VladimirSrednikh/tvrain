@@ -66,7 +66,6 @@ end;
 
 constructor TRemakeThread.Create;
 begin
-  FreeOnTerminate := True;
   FSelfPath := IncludeTrailingPathDelimiter(ExtractFilePath(ParamStr(0)));
   inherited Create(False);
 end;
@@ -92,8 +91,9 @@ end;
 
 procedure TRemakeThread.DoTask(ATask: TTaskItem);
 var
-  I, PartI: Integer;
+  I: Integer;
   TempResFile, NewFileName: string;
+  ResultFile, TempFile: TFileStream;
 begin
   if ATask.FPlayList <> nil then
   begin
@@ -102,16 +102,11 @@ begin
       TDirectory.CreateDirectory(FDownloadPath);
     //
     FTempPath := IncludeTrailingPathDelimiter(TPath.GetTempPath) + 'Eagle-' + IntToStr(ATask.FPlayList.FEagleId) + '\';
-    try
-      if DirectoryExists(FTempPath) then
-        TDirectory.Delete(FTempPath, True);
-    except
-    end;
+    if DirectoryExists(FTempPath) then
+      TDirectory.Delete(FTempPath, True);
     CreateDir(FTempPath);
     FIdHTTP := TIdHTTP.Create(nil);
     try
-      TFile.Copy(FSelfPath + 'ffmpeg.exe', FTempPath + 'ffmpeg.exe');
-      PartI := 0;
       for I := 0 to ATask.FPlayList.TrackCount - 1 do
       begin
         DownloadFile(ATask.FPlayList.FullTrackPath(I), ATask.FPlayList.Tracks[I].FileName, FTempPath);
@@ -119,8 +114,23 @@ begin
       end;
       // последнюю часть также объединяем
       TempResFile := 'Res_Eagle' + IntToStr(ATask.FPlayList.FEagleId) + '.mp4';
-      MergeFiles(LastFileSeq, TempResFile, FTempPath);
       NewFileName := Trim(FDownloadPath + Trim(ATask.FPlayList.Title)) + '.mp4';
+
+      ResultFile := TFileStream.Create(FTempPath + TempResFile, fmCreate + fmOpenWrite);
+      try
+        for I := 0 to ATask.FPlayList.TrackCount - 1 do
+        begin
+          TempFile := System.IOUtils.TFile.OpenRead(FTempPath + ATask.FPlayList.Tracks[I].FileName);
+          try
+            TempFile.Position := 0;
+            ResultFile.CopyFrom(TempFile, TempFile.Size);
+          finally
+            FreeAndNil(TempFile);
+          end;
+        end;
+      finally
+        ResultFile.Free;
+      end;
       if FileExists(NewFileName) then
         TFile.Delete(NewFileName);
       if FileExists(FTempPath + TempResFile) then
