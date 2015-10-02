@@ -311,6 +311,14 @@ begin
         end;
       end;
     end;
+    if Length(AEagleList) = 0 then
+    if StartsText('eagleplayer-', node.id) then
+    begin // <div id="eagleplayer-335957-series" class="eagle-player-series clearfix">
+      attr := Copy(node.id, Length('eagleplayer-') + 1, Length(node.id));
+      attr := Copy(attr, 1, LastDelimiter('-', attr) - 1);
+      SetLength(AEagleList, Length(AEagleList) + 1);
+      AEagleList[Length(AEagleList) - 1] := attr;
+    end;
   end
   else
   begin
