@@ -3,13 +3,14 @@ unit untRecode;
 interface
 
 uses
-  System.Classes, System.SysUtils, Winapi.Windows, System.IOUtils, untM3U,
-  IdHTTP, System.SyncObjs
+  System.Classes, System.SysUtils, Winapi.Windows, System.IOUtils,
+  System.Generics.Collections, System.Generics.Defaults,
+  untM3U,IdHTTP, System.SyncObjs
   ;
 
 type
 
-  TTaskItem = class(TCollectionItem)
+  TTaskItem = class
   public
     FPlayList: TM3UPlayList;
     FCurrentFile: Integer;
@@ -37,7 +38,7 @@ type
 procedure AddTask(APlayList: TM3UPlayList);
 
 var
-  DownloadList: TCollection;
+  DownloadList: TList<TTaskItem>;
   Event: TEvent;
   RemakeThread: TRemakeThread;
 
@@ -52,10 +53,11 @@ var
 begin
   cs.Enter;
   try
-    t := DownloadList.Add as TTaskItem;
+    t := TTaskItem.Create;
     t.FPlayList := APlayList;
     t.SuccessDownloaded := False;
     t.FCurrentFile := 0;
+    DownloadList.Add(t);
     Event.SetEvent;
   finally
     cs.Leave;
@@ -225,7 +227,7 @@ var
   tmp_g: TGUID;
 initialization
   cs := TCriticalSection.Create;
-  DownloadList := TCollection.Create(TTaskItem);
+  DownloadList := TList<TTaskItem>.Create;
   CreateGUID(tmp_g);
   Event := TEvent.Create(nil, False, False, GUIDToString(tmp_g));
   RemakeThread := TRemakeThread.Create;

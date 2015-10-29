@@ -1,9 +1,9 @@
-object Form1: TForm1
+object MainForm: TMainForm
   Left = 0
   Top = 0
-  Caption = 'Form1'
+  Caption = 'MainForm'
   ClientHeight = 600
-  ClientWidth = 810
+  ClientWidth = 882
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -16,10 +16,18 @@ object Form1: TForm1
   OnDestroy = FormDestroy
   PixelsPerInch = 96
   TextHeight = 13
+  object spl1: TSplitter
+    Left = 605
+    Top = 0
+    Height = 560
+    Align = alRight
+    ExplicitLeft = 648
+    ExplicitTop = 8
+  end
   object pgcPages: TPageControl
     Left = 0
     Top = 0
-    Width = 810
+    Width = 605
     Height = 560
     ActivePage = tsMain
     Align = alClient
@@ -29,10 +37,11 @@ object Form1: TForm1
       object ewbMain: TEmbeddedWB
         Left = 0
         Top = 0
-        Width = 802
+        Width = 597
         Height = 532
         Align = alClient
         TabOrder = 0
+        Silent = False
         OnBeforeNavigate2 = ewbMainBeforeNavigate2
         OnNavigateComplete2 = ewbMainNavigateComplete2
         DisableCtrlShortcuts = 'N'
@@ -41,9 +50,7 @@ object Form1: TForm1
         PrintOptions.HTMLHeader.Strings = (
           '<HTML></HTML>')
         PrintOptions.Orientation = poPortrait
-        ExplicitTop = 264
-        ExplicitWidth = 675
-        ExplicitHeight = 436
+        ExplicitWidth = 577
         ControlData = {
           4C000000021F0000810F00000000000000000000000000000000000000000000
           000000004C000000000000000000000001000000E0D057007335CF11AE690800
@@ -53,25 +60,25 @@ object Form1: TForm1
       end
     end
   end
-  object pnl1: TPanel
+  object pnlBottom: TPanel
     Left = 0
     Top = 560
-    Width = 810
+    Width = 882
     Height = 40
     Align = alBottom
-    Caption = 'pnl1'
-    TabOrder = 1
+    Caption = 'pnlBottom'
+    TabOrder = 2
     object cbxLog: TComboBox
       Left = 1
       Top = 1
-      Width = 623
+      Width = 695
       Height = 21
       Align = alClient
       Style = csDropDownList
       TabOrder = 0
     end
     object pnl2: TPanel
-      Left = 624
+      Left = 696
       Top = 1
       Width = 185
       Height = 38
@@ -84,7 +91,7 @@ object Form1: TForm1
         Width = 183
         Height = 20
         Align = alTop
-        TabOrder = 0
+        TabOrder = 1
       end
       object pbCount: TProgressBar
         Left = 1
@@ -92,9 +99,17 @@ object Form1: TForm1
         Width = 183
         Height = 20
         Align = alTop
-        TabOrder = 1
+        TabOrder = 0
       end
     end
+  end
+  object pnlFileList: TPanel
+    Left = 608
+    Top = 0
+    Width = 274
+    Height = 560
+    Align = alRight
+    TabOrder = 1
   end
   object mmMain: TMainMenu
     Left = 364
@@ -113,13 +128,14 @@ object Form1: TForm1
       Caption = 'Get '#1054#1089#1090#1088#1086#1074' '#1075#1088#1086#1084#1072
       OnClick = mniWowMp3Click
     end
-    object mniFastMM1: TMenuItem
-      Caption = 'FastMM'
-      OnClick = mniFastMM1Click
+    object mniEchoMsk: TMenuItem
+      Caption = #1057#1082#1072#1095#1072#1090#1100' '#1089' '#1069#1093#1072
+      OnClick = mniEchoMskClick
     end
   end
   object IdHTTP1: TIdHTTP
     AllowCookies = True
+    HandleRedirects = True
     ProxyParams.BasicAuthentication = False
     ProxyParams.ProxyPort = 0
     Request.ContentLength = -1
@@ -137,7 +153,12 @@ object Form1: TForm1
   object tmr1: TTimer
     Interval = 500
     OnTimer = tmr1Timer
-    Left = 592
-    Top = 8
+    Left = 572
+    Top = 4
+  end
+  object XMLDocument1: TXMLDocument
+    Left = 576
+    Top = 76
+    DOMVendorDesc = 'MSXML'
   end
 end

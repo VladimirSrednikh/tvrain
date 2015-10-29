@@ -8,14 +8,15 @@ uses
   EwbCore, EmbeddedWB, MSHTML_EWB, Vcl.ComCtrls, IdBaseComponent, IdComponent,
   IdTCPConnection, IdTCPClient, IdHTTP,
   untM3U,
-  untfrmWebTab, Vcl.StdCtrls, Vcl.ExtCtrls
+  untfrmWebTab, Vcl.StdCtrls, Vcl.ExtCtrls, Xml.xmldom, Xml.XMLIntf, Xml.XMLDoc,
+  Xml.Win.msxmldom, fmuDownloadFile
 //  , cefvcl, ceflib, untChrom_Helper;
   ;
 
 type
   TIntArray = array of Integer;
 
-  TForm1 = class(TForm)
+  TMainForm = class(TForm)
     ewbMain: TEmbeddedWB;
     mmMain: TMainMenu;
     gototvrain1: TMenuItem;
@@ -26,12 +27,15 @@ type
     mniLog: TMenuItem;
     cbxLog: TComboBox;
     mniWowMp3: TMenuItem;
-    mniFastMM1: TMenuItem;
-    pnl1: TPanel;
+    mniEchoMsk: TMenuItem;
+    pnlBottom: TPanel;
     pnl2: TPanel;
     pbProgressCurrent: TProgressBar;
     pbCount: TProgressBar;
     tmr1: TTimer;
+    XMLDocument1: TXMLDocument;
+    spl1: TSplitter;
+    pnlFileList: TPanel;
     procedure FormCreate(Sender: TObject);
     procedure mniDownloadClick(Sender: TObject);
     procedure ewbMainBeforeNavigate2(ASender: TObject; const pDisp: IDispatch;
@@ -42,12 +46,11 @@ type
     procedure mniCloseClick(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
     procedure mniWowMp3Click(Sender: TObject);
-    procedure mniFastMM1Click(Sender: TObject);
+    procedure mniEchoMskClick(Sender: TObject);
     procedure tmr1Timer(Sender: TObject);
   private
     { Private declarations }
     FLog: TStringList;
-    function FindNodeByAttrExStarts(ANode: IHTMLElement; NodeName, AttrName, AttrValue: string): IHTMLElement;
     function GetHttpStr(AURL: string): string; // Работает с системными настройками браузера
     procedure Log(AText{, AFileName}: string);
 
@@ -58,34 +61,46 @@ type
   public
     { Public declarations }
     procedure DownloadFromWebPage(frm: TfrmWebTab);
-    function GetHttpString(AURL: string): string; //Не работает без указание проски
+    function GetHttpString(AURL: string): string; //Не работает без указание прокси
     procedure DownloadFile(AURL, AFileName, ADestFolder: string);
   end;
 
 var
-  Form1: TForm1;
+  MainForm: TMainForm;
 
 implementation
 
 {$R *.dfm}
 
 uses Winapi.WinInet, System.StrUtils, Soap.XSBuiltIns,
-  untIECompat, EwbTools, superobject, untRecode;//, FastMMUsageTracker;
+  StringFuncs, System.IOUtils,
+  untIECompat, EwbTools, superobject, untRecode;
 
-procedure TForm1.DownloadFile(AURL, AFileName, ADestFolder: string);
+procedure TMainForm.DownloadFile(AURL, AFileName, ADestFolder: string);
 var
   AStream: TFileStream;
+  cnt: Integer;
 begin
+  if not TDirectory.Exists(ADestFolder) then
+    TDirectory.CreateDirectory(ADestFolder);
   AStream := TFileStream.Create(ADestFolder + AFileName, fmCreate);
   try
     IdHTTP1.Request.Accept := '*/*';
-    IdHTTP1.Get(AURL, AStream);
+    cnt := 1;
+    repeat
+      try
+        IdHTTP1.Get(AURL, AStream);
+        cnt := 5;
+      except
+        cnt := cnt + 1;
+      end;
+    until cnt >= 5;
   finally
     AStream.Free;
   end;
 end;
 
-procedure TForm1.ewbMainBeforeNavigate2(ASender: TObject;
+procedure TMainForm.ewbMainBeforeNavigate2(ASender: TObject;
   const pDisp: IDispatch; var URL, Flags, TargetFrameName, PostData,
   Headers: OleVariant; var Cancel: WordBool);
 var
@@ -111,13 +126,13 @@ begin
     end;
 end;
 
-procedure TForm1.ewbMainNavigateComplete2(ASender: TObject;
+procedure TMainForm.ewbMainNavigateComplete2(ASender: TObject;
   const pDisp: IDispatch; var URL: OleVariant);
 begin
   tsMain.Tag := 0;
 end;
 
-procedure TForm1.FillPlayList(AEgleID: Integer; APlayList: TM3UPlayList);
+procedure TMainForm.FillPlayList(AEgleID: Integer; APlayList: TM3UPlayList);
 var
   str,
   eagleLink, SecureLink, M3ULink, PlayListLink,
@@ -184,50 +199,7 @@ begin
   end;
 end;
 
-function TForm1.FindNodeByAttrExStarts(ANode: IHTMLElement; NodeName, AttrName,
-  AttrValue: string): IHTMLElement;
-var
-  I: Integer;
-  child: IHTMLElement;
-  str: string;
-begin
-  if ANode = nil then
-    begin
-      Result := nil;
-      Exit;
-    end;
-  Result := nil;
-//  OutputDebugString(PChar(
-//    Format('FindNodeByAttrEx: %s _ %s _ %s in  %s id = %s, class = %s ',
-//    [NodeName,  AttrName,  AttrValue,
-//      ANode.tagName, ANode.id,  ANode.classname])));
-  if Sametext(ANode.tagName, NodeName) then
-  begin
-    if AttrName.IsEmpty then
-      Result := ANode
-    else if SameText(AttrName, 'class') then
-    begin
-      if StartsText(AttrValue, ANode.classname) then
-        Result := ANode;
-    end
-    else // для иных атрибутов
-    begin
-      str := ANode.getAttribute(AttrName, 0);
-      if AttrValue.IsEmpty or StartsText(AttrValue, str) then
-        Result := ANode
-    end
-  end;
-  if not Assigned(Result) then
-  for I := 0 to (ANode.children as IHTMLElementCollection).length - 1 do
-    begin
-      child := (ANode.children as IHTMLElementCollection).item(I, 0) as IHTMLElement;
-      Result := FindNodeByAttrExStarts(child, NodeName, AttrName, AttrValue);
-      if Result <> nil then
-        Exit;
-    end;
-end;
-
-procedure TForm1.FormCreate(Sender: TObject);
+procedure TMainForm.FormCreate(Sender: TObject);
 begin
   FLog := TStringList.Create;
   PutIECompatible(GetIEVersionMajor, cmrCurrentUser);
@@ -236,12 +208,12 @@ begin
 //  chrm1.Browser.MainFrame.LoadUrl('http://tvrain.ru/teleshow/here_and_now/alkogol_budet_deshevle-393275/');
 end;
 
-procedure TForm1.FormDestroy(Sender: TObject);
+procedure TMainForm.FormDestroy(Sender: TObject);
 begin
   FreeAndNil(FLog);
 end;
 
-procedure TForm1.DownloadFromWebPage(frm: TfrmWebTab);
+procedure TMainForm.DownloadFromWebPage(frm: TfrmWebTab);
 var
   Title: string;
   PlayList: TM3UPlayList;
@@ -259,6 +231,7 @@ begin
       FillPlayList(IDs[I], PlayList);
       if Length(IDs) > 1 then
         PlayList.Title := PlayList.Title + ' Часть ' + IntToStr(I + 1);
+      TFrmDownloadFile.CreateFrame(PlayList, pnlFileList);
       AddTask(PlayList);
     except
       FreeAndNil(PlayList);
@@ -266,7 +239,7 @@ begin
   end;
 end;
 
-function TForm1.GetHttpString(AURL: string): string;
+function TMainForm.GetHttpString(AURL: string): string;
 var
   AStream: TStringStream;
 begin
@@ -285,7 +258,7 @@ begin
   end;
 end;
 
-procedure TForm1.GetEagleIDs(AEwb: TEmbeddedWB;
+procedure TMainForm.GetEagleIDs(AEwb: TEmbeddedWB;
   var AEagleList: TIntArray);
 var
   node, child: IHTMLElement;
@@ -337,7 +310,7 @@ begin
   end;
 end;
 
-function TForm1.GetTVRainTitle(AEwb: TEmbeddedWB): string;
+function TMainForm.GetTVRainTitle(AEwb: TEmbeddedWB): string;
 var
   root, node: IHTMLElement;
 begin
@@ -361,7 +334,7 @@ begin
   Result := StringReplace(Result, '|', ' ', [rfReplaceAll]);
 end;
 
-procedure TForm1.Log(AText{, AFileName}: string);
+procedure TMainForm.Log(AText{, AFileName}: string);
 //var
 //  SaveFile: TStringList;
 begin
@@ -376,7 +349,7 @@ begin
 //  end;
 end;
 
-function TForm1.GetHttpStr(AURL: string): string;
+function TMainForm.GetHttpStr(AURL: string): string;
 const
   BufferSize = 1024;
 var
@@ -409,7 +382,7 @@ begin
   end;
 end;
 
-procedure TForm1.mniCloseClick(Sender: TObject);
+procedure TMainForm.mniCloseClick(Sender: TObject);
 var
   ts: TTabSheet;
 begin
@@ -418,7 +391,7 @@ begin
   FreeAndNil(ts);
 end;
 
-procedure TForm1.mniDownloadClick(Sender: TObject);
+procedure TMainForm.mniDownloadClick(Sender: TObject);
 var
   control: TControl;
   I: Integer;
@@ -438,14 +411,72 @@ begin
 end;
 
 
-procedure TForm1.mniFastMM1Click(Sender: TObject);
+procedure TMainForm.mniEchoMskClick(Sender: TObject);
+var
+  doc: IXMLDocument;
+  AStream: TMemoryStream;
+  root, item: IXMLNode;
+  I: Integer;
+  Arr: TStrArray;
+  URL, Filename, NewFilename, FileDay, ProgramName, FileTime: string;
 begin
+  doc := TXMLDocument.Create(nil);
+  AStream := TMemoryStream.Create;
+  try
+    IdHTTP1.Request.Accept := '*/*';
+    IdHTTP1.Get('http://echo.msk.ru/interview/rss-audio.xml', AStream);
+    doc.LoadFromStream(AStream);
+    root := doc.DocumentElement;
+    root := root.ChildNodes.FindNode('channel');
+    if root <> nil then
+    for I := 0 to root.ChildNodes.Count - 1 do
+      if SameText(root.ChildNodes.Get(I).LocalName, 'item') then
+      begin
+        item := root.ChildNodes.Get(I);
+        URL := item.ChildValues['guid'];
+        if URL <> '' then //<guid>http://cdn.echo.msk.ru/snd/2015-10-11-razvorot-morning-0706.mp3</guid>
+        begin
+          Filename := Copy(URL, LastDelimiter('/', URL) + 1, Length(URL));
+          Filename := ReplaceStr(Filename, '.mp3', '');
+          DecomposeText(Arr, '-', Filename); //2015-10-04-tabel-2005
+          if SameText('bigecho', Arr[3]) or SameText('classicrock', Arr[3])
+            or SameText('odna', Arr[3]) or SameText('risk', Arr[3])
+            or SameText('vinil', Arr[3]) or SameText('peskov', Arr[3])
+            or SameText('unpast', Arr[3]) or SameText('buntman', Arr[3])
+            or SameText('farm', Arr[3]) or SameText('apriscatole', Arr[3])
+            or SameText('moscowtravel', Arr[3]) or SameText('speakrus', Arr[3])
+            or SameText('orders', Arr[3]) or SameText('kazino', Arr[3])
+            or SameText('autorsong', Arr[3]) or SameText('redrquare', Arr[3])
+            or SameText('museum', Arr[3]) or SameText('voensovet', Arr[3])
+            or SameText('parking', Arr[3]) or SameText('graniweek', Arr[3])
+            or SameText('gorodovoy', Arr[3]) or SameText('proehali', Arr[3])
+            or SameText('skaner', Arr[3]) or SameText('doehali', Arr[3])
+            or SameText('zoloto', Arr[3]) or SameText('glam', Arr[3])
+            or SameText('babnik', Arr[3]) or SameText('blues', Arr[3])
+            or SameText('znamenatel', Arr[3]) or SameText('arsenal', Arr[3])
+            or SameText('football', Arr[3]) or SameText('galopom', Arr[3])
+            or SameText('autorsong', Arr[3]) or SameText('tabel', Arr[3])
+            //or SameText('', Arr[3]) or SameText('', Arr[3])
+          then
+            Continue;
+
+          FileDay := Format('%s-%s', [Arr[1], Arr[2]]);
+          if Length(Arr) = 5  then
+            NewFilename := Format('%s_%s_%s.mp3', [Arr[0] + '-' + FileDay, Arr[4], Arr[3]])
+          else
+            NewFilename := Format('%s_%s_%s-%s.mp3', [Arr[0] + '-' + FileDay, Arr[5], Arr[3], Arr[4]]);
+          DownloadFile(URL, NewFilename, 'H:\Downloads\Echo\' + FileDay + '\');
+        end;
+      end;
+  finally
+    AStream.Free;
+  end;
 //  ShowFastMMUsageTracker;
 //chrm1.Browser.ShowDevTools;
 //  chrm1.Browser.MainFrame.VisitDomProc(AddEagleToDownloaList);
 end;
 
-procedure TForm1.mniWowMp3Click(Sender: TObject);
+procedure TMainForm.mniWowMp3Click(Sender: TObject);
 //var
 //  obj: ISuperObject;
 //  I, len: Integer;
@@ -466,20 +497,41 @@ begin
 //  end;
 end;
 
-procedure TForm1.tmr1Timer(Sender: TObject);
+procedure TMainForm.tmr1Timer(Sender: TObject);
+  function GetFrame(AEagelId: Integer): TFrmDownloadFile;
+  var
+    I: Integer;
+    frm: TFrmDownloadFile;
+  begin
+    Result := nil;
+    for I := 0 to pnlFileList.ControlCount - 1 do
+    if pnlFileList.Controls[I] is TFrmDownloadFile then
+    begin
+      frm := pnlFileList.Controls[I] as TFrmDownloadFile;
+      if frm.EagleId = AEagelId then
+        Exit(frm);
+    end;
+  end;
 var
   i: Integer;
   found: Boolean;
+  frm2: TFrmDownloadFile;
 begin
   pbCount.Max := DownloadList.Count;
   found := False;
   for I := DownloadList.Count - 1 downto 0 do
-    if not (DownloadList.Items[I] as TTaskItem).SuccessDownloaded then
     begin
-      pbCount.Position := I;
-      pbProgressCurrent.Max := (DownloadList.Items[I] as TTaskItem).FPlayList.TrackCount;
-      pbProgressCurrent.Position := (DownloadList.Items[I] as TTaskItem).FCurrentFile;
-      found := True;
+      frm2 := GetFrame(DownloadList[I].FPlayList.FEagleId);
+      if frm2 <> nil then
+      begin
+        if DownloadList[I].SuccessDownloaded then
+          frm2.pbFile.Visible := False
+        else
+        begin
+          frm2.pbFile.Max := DownloadList[I].FPlayList.TrackCount;
+          frm2.pbFile.Position := DownloadList[I].FCurrentFile;
+        end;
+      end;
     end;
   if not found then
   begin

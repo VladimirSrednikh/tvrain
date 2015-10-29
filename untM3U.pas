@@ -87,7 +87,6 @@ end;
 procedure TM3UPlayList.SetPlayList(APLayList: TStrings);
 var
   I, SeparartorPos: Integer;
-//  dur: Double;
   str: string;
 begin
   SetLength(FTracks, 0);

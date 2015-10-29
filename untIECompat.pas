@@ -2,6 +2,9 @@ unit untIECompat;
 
 interface
 
+uses System.SysUtils, System.StrUtils,
+  MSHTML_EWB;
+
 type
   TCompatibleModeRegistry = (cmrCurrentUser, cmrLocalMachine, cmrBoth);
 
@@ -11,9 +14,13 @@ const
 
 procedure PutIECompatible(MajorVer: Integer; CMR: TCompatibleModeRegistry);
 
+function FindNodeByAttrExStarts(ANode: IHTMLElement; NodeName, AttrName,
+  AttrValue: string): IHTMLElement;
+
+
 implementation
 
-uses Winapi.Windows, System.Win.Registry, Vcl.Forms, System.SysUtils;
+uses Winapi.Windows, System.Win.Registry, Vcl.Forms;
 
 type
   TIsWow64Process = function(hProcess: THandle; var Wow64Process: BOOL)
@@ -75,6 +82,49 @@ begin
       Reg.Free;
     end;
   end;
+end;
+
+function FindNodeByAttrExStarts(ANode: IHTMLElement; NodeName, AttrName,
+  AttrValue: string): IHTMLElement;
+var
+  I: Integer;
+  child: IHTMLElement;
+  str: string;
+begin
+  if ANode = nil then
+    begin
+      Result := nil;
+      Exit;
+    end;
+  Result := nil;
+//  OutputDebugString(PChar(
+//    Format('FindNodeByAttrEx: %s _ %s _ %s in  %s id = %s, class = %s ',
+//    [NodeName,  AttrName,  AttrValue,
+//      ANode.tagName, ANode.id,  ANode.classname])));
+  if Sametext(ANode.tagName, NodeName) then
+  begin
+    if AttrName.IsEmpty then
+      Result := ANode
+    else if SameText(AttrName, 'class') then
+    begin
+      if StartsText(AttrValue, ANode.classname) then
+        Result := ANode;
+    end
+    else // для иных атрибутов
+    begin
+      str := ANode.getAttribute(AttrName, 0);
+      if AttrValue.IsEmpty or StartsText(AttrValue, str) then
+        Result := ANode
+    end
+  end;
+  if not Assigned(Result) then
+  for I := 0 to (ANode.children as IHTMLElementCollection).length - 1 do
+    begin
+      child := (ANode.children as IHTMLElementCollection).item(I, 0) as IHTMLElement;
+      Result := FindNodeByAttrExStarts(child, NodeName, AttrName, AttrValue);
+      if Result <> nil then
+        Exit;
+    end;
 end;
 
 end.

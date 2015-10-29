@@ -112,7 +112,7 @@
             <MainSource>MainSource</MainSource>
         </DelphiCompile>
         <DCCReference Include="Unit1.pas">
-            <Form>Form1</Form>
+            <Form>MainForm</Form>
             <FormType>dfm</FormType>
         </DCCReference>
         <DCCReference Include="untfrmWebTab.pas">
@@ -123,6 +123,10 @@
         <DCCReference Include="untIECompat.pas"/>
         <DCCReference Include="untM3U.pas"/>
         <DCCReference Include="untRecode.pas"/>
+        <DCCReference Include="fmuDownloadFile.pas">
+            <Form>frmDownloadFile</Form>
+            <DesignClass>TFrame</DesignClass>
+        </DCCReference>
         <BuildConfiguration Include="Release">
             <Key>Cfg_2</Key>
             <CfgParent>Base</CfgParent>
