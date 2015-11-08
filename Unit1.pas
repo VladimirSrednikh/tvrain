@@ -261,20 +261,27 @@ end;
 procedure TMainForm.GetEagleIDs(AEwb: TEmbeddedWB;
   var AEagleList: TIntArray);
 var
-  node, child: IHTMLElement;
+  Root, youtube, node, child: IHTMLElement;
   EagleId: Integer;
   I: Integer;
   str: string;
   attr: OleVariant;
 begin
   SetLength(AEagleList, 0);
-  node := FindNodeByAttrExStarts((AEwb.Document as IHTMLDocument3).documentElement, 'div', 'class', 'eagle-player-series');
+  Root := FindNodeByAttrExStarts((AEwb.Document as IHTMLDocument3).documentElement, 'div', 'class', 'main-data-nest');
+  youtube := FindNodeByAttrExStarts(Root, 'iframe', 'id', 'player');
+  node := FindNodeByAttrExStarts(Root, 'div', 'class', 'eagle-player-series');
+  if node = nil then
+    node := FindNodeByAttrExStarts(Root, 'div', 'class', 'vodplayer-series clearfix');
+
   if node <> nil then
   begin
     for I := 0 to (node.children as IHTMLElementCollection).length - 1 do
     begin
       child := (node.children as IHTMLElementCollection).item(I, 0) as IHTMLElement;
-      if SameText(child.tagName, 'div') and StartsText('eagle-player-series', child.className) then
+      if SameText(child.tagName, 'div') and
+        ( StartsText('eagle-player-series', child.className)
+          or StartsText('vodplayer-series', child.className)) then
       begin
         attr := child.getAttribute('data-id', 0);
         if not VarIsNull(attr) then
@@ -285,13 +292,29 @@ begin
       end;
     end;
     if Length(AEagleList) = 0 then
-    if StartsText('eagleplayer-', node.id) then
-    begin // <div id="eagleplayer-335957-series" class="eagle-player-series clearfix">
-      attr := Copy(node.id, Length('eagleplayer-') + 1, Length(node.id));
-      attr := Copy(attr, 1, LastDelimiter('-', attr) - 1);
-      SetLength(AEagleList, Length(AEagleList) + 1);
-      AEagleList[Length(AEagleList) - 1] := attr;
-    end;
+      if StartsText('eagleplayer-', node.id) then
+      begin // <div id="eagleplayer-335957-series" class="eagle-player-series clearfix">
+        attr := Copy(node.id, Length('eagleplayer-') + 1, Length(node.id));
+        attr := Copy(attr, 1, LastDelimiter('-', attr) - 1);
+        SetLength(AEagleList, Length(AEagleList) + 1);
+        AEagleList[Length(AEagleList) - 1] := attr;
+      end
+      else if StartsText('vodplayer-', node.id) then
+      begin // <div id="vodplayer-349699-series" class="vodplayer-series clearfix">
+
+        attr := Copy(node.id, Length('vodplayer-') + 1, Length(node.id));
+        attr := Copy(attr, 1, LastDelimiter('-', attr) - 1);
+        SetLength(AEagleList, Length(AEagleList) + 1);
+        AEagleList[Length(AEagleList) - 1] := attr;
+      end
+
+//      data-player="349699"
+
+//    if Length(AEagleList) = 0 then  //
+//    begin
+//
+//    end;
+
   end
   else
   begin

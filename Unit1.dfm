@@ -34,6 +34,10 @@ object MainForm: TMainForm
     TabOrder = 0
     object tsMain: TTabSheet
       Caption = 'tsMain'
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       object ewbMain: TEmbeddedWB
         Left = 0
         Top = 0
@@ -50,7 +54,6 @@ object MainForm: TMainForm
         PrintOptions.HTMLHeader.Strings = (
           '<HTML></HTML>')
         PrintOptions.Orientation = poPortrait
-        ExplicitWidth = 577
         ControlData = {
           4C000000021F0000810F00000000000000000000000000000000000000000000
           000000004C000000000000000000000001000000E0D057007335CF11AE690800
