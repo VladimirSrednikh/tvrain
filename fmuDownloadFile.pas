@@ -19,7 +19,7 @@ type
   public
     { Public declarations }
     EagleId: Integer;
-    constructor CreateFrame(APlayList: TM3UPlayList; AOwner: TComponent);
+    constructor CreateFrame(APlayList: TM3UPlayList; AOwner: TControl);
   end;
 
 implementation
@@ -28,18 +28,20 @@ implementation
 
 { TFrmDownloadFile }
 
-constructor TFrmDownloadFile.CreateFrame(APlayList: TM3UPlayList; AOwner: TComponent);
+constructor TFrmDownloadFile.CreateFrame(APlayList: TM3UPlayList; AOwner: TControl);
 begin
   inherited Create(AOwner);
   Name := '';
-  EagleId := APlayList.FEagleId;
+  EagleId := APlayList.FPlayerId;
   if AOwner is TWinControl then
     Parent := AOwner as TWinControl;
   lblFileName.Caption := APlayList.Title;
   pbFile.Max := APlayList.TrackCount;
   pbFile.Position := 0;
   pbFile.Visible := True;
-  Self.Align := alBottom;
+  Self.Align := alTop;
+  if (Self.Top + Self.Height) > AOwner.Height then
+    AOwner.Height := Self.Top + Self.Height;
 end;
 
 end.

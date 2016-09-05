@@ -15,6 +15,7 @@ type
   TTrack = record
     Duration: Double;
     Title: string;
+    URL,
     FileName: string;
   end;
 
@@ -31,11 +32,19 @@ type
     function Get(Index: Integer): TTrack;
     function GetTrackCount: Integer;
   public
-    FEagleId: Integer;
+    FPlayerId: Integer;
+    FTVRainPath: string;
+    //
+    FSourceURL: string;
+    FPlayerData: string;
+    FSecureData: string;
+    FM3UData: string;
+    FPictureLink: string;
+
     constructor Create;
     procedure SetPlayList(APLayList: TStrings);
     function FullTrackPath(AIndex: Integer): string;
-    //
+    /// <summary>ѕуть, к которому добавл€ютс€ файлы дл€ скачивани€</summary>
     property BasePath: string read FBasePath write SetBasePath;
     property Tracks[Index: Integer]: TTrack read Get;
     property TrackCount: Integer read GetTrackCount;
@@ -57,14 +66,16 @@ begin
 end;
 
 function TM3UPlayList.FullTrackPath(AIndex: Integer): string;
-var
-  Delim: string;
+//var
+//  Delim: string;
 begin
-  if (Copy(FBasePath, Length(FBasePath), 1) = '/') or (Copy(FTracks[AIndex].FileName, 1, 1) = '/') then
-    Delim := ''
+  if ContainsStr(FTracks[AIndex].URL, '://') then
+    Result := FTracks[AIndex].URL
   else
-    Delim := '/';
-  Result := FBasePath + Delim + FTracks[AIndex].FileName;
+  if (Copy(FBasePath, Length(FBasePath), 1) = '/') or (Copy(FTracks[AIndex].URL, 1, 1) = '/') then
+    Result := FBasePath + FTracks[AIndex].URL
+  else
+    Result := FBasePath + '/' + FTracks[AIndex].URL;
 end;
 
 function TM3UPlayList.Get(Index: Integer): TTrack;
@@ -106,7 +117,11 @@ begin
         FTracks[FTrackCount - 1].Duration := StrToFloatDef(str, 0);
         I := I + 1;
         if I < (APLayList.Count - 1) then
-          FTracks[FTrackCount - 1].FileName := APLayList[I];
+        begin
+          FTracks[FTrackCount - 1].URL := APLayList[I];
+          SeparartorPos := APLayList[I].LastDelimiter('/' + DriveDelim);
+          FTracks[FTrackCount - 1].FileName := APLayList[I].SubString(SeparartorPos + 1);
+        end;
       end
     else
       I := I + 1;

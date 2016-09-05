@@ -2,8 +2,8 @@ object MainForm: TMainForm
   Left = 0
   Top = 0
   Caption = 'MainForm'
-  ClientHeight = 600
-  ClientWidth = 882
+  ClientHeight = 776
+  ClientWidth = 973
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -12,40 +12,38 @@ object MainForm: TMainForm
   Font.Style = []
   Menu = mmMain
   OldCreateOrder = False
+  OnClose = FormClose
   OnCreate = FormCreate
   OnDestroy = FormDestroy
   PixelsPerInch = 96
   TextHeight = 13
   object spl1: TSplitter
-    Left = 605
+    Left = 693
     Top = 0
-    Height = 560
+    Height = 736
     Align = alRight
     ExplicitLeft = 648
     ExplicitTop = 8
+    ExplicitHeight = 560
   end
   object pgcPages: TPageControl
     Left = 0
     Top = 0
-    Width = 605
-    Height = 560
+    Width = 693
+    Height = 736
     ActivePage = tsMain
     Align = alClient
     TabOrder = 0
     object tsMain: TTabSheet
       Caption = 'tsMain'
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
+      OnShow = tsMainShow
       object ewbMain: TEmbeddedWB
         Left = 0
         Top = 0
-        Width = 597
-        Height = 532
+        Width = 685
+        Height = 708
         Align = alClient
         TabOrder = 0
-        Silent = False
         OnBeforeNavigate2 = ewbMainBeforeNavigate2
         OnNavigateComplete2 = ewbMainNavigateComplete2
         DisableCtrlShortcuts = 'N'
@@ -62,26 +60,89 @@ object MainForm: TMainForm
           00000000000000000100000000000000000000000000000000000000}
       end
     end
+    object tsWowSound: TTabSheet
+      Caption = 'WowSound'
+      ImageIndex = 1
+      object wbWow: TWebBrowser
+        Left = 0
+        Top = 37
+        Width = 685
+        Height = 671
+        Align = alClient
+        TabOrder = 0
+        ExplicitLeft = 168
+        ExplicitTop = 152
+        ExplicitWidth = 300
+        ExplicitHeight = 150
+        ControlData = {
+          4C000000CC4600005A4500000000000000000000000000000000000000000000
+          000000004C000000000000000000000001000000E0D057007335CF11AE690800
+          2B2E126208000000000000004C0000000114020000000000C000000000000046
+          8000000000000000000000000000000000000000000000000000000000000000
+          00000000000000000100000000000000000000000000000000000000}
+      end
+      object pnlTop: TPanel
+        Left = 0
+        Top = 0
+        Width = 685
+        Height = 37
+        Align = alTop
+        TabOrder = 1
+        DesignSize = (
+          685
+          37)
+        object edtWowURL: TEdit
+          Left = 8
+          Top = 8
+          Width = 470
+          Height = 21
+          Anchors = [akLeft, akTop, akRight, akBottom]
+          TabOrder = 0
+          Text = 'http://www.wowhead.com/zone=210/icecrown'
+          OnClick = btnGoWowClick
+        end
+        object btnGoWow: TBitBtn
+          Left = 511
+          Top = 6
+          Width = 45
+          Height = 25
+          Anchors = [akTop, akRight]
+          Caption = 'Go!'
+          TabOrder = 1
+          OnClick = btnGoWowClick
+        end
+        object btnDownloadWowSound: TButton
+          Left = 562
+          Top = 6
+          Width = 113
+          Height = 25
+          Anchors = [akTop, akRight]
+          Caption = 'DownloadWowSound'
+          TabOrder = 2
+          OnClick = btnDownloadWowSoundClick
+        end
+      end
+    end
   end
   object pnlBottom: TPanel
     Left = 0
-    Top = 560
-    Width = 882
+    Top = 736
+    Width = 973
     Height = 40
     Align = alBottom
     Caption = 'pnlBottom'
-    TabOrder = 2
+    TabOrder = 1
     object cbxLog: TComboBox
       Left = 1
       Top = 1
-      Width = 695
+      Width = 786
       Height = 21
       Align = alClient
       Style = csDropDownList
       TabOrder = 0
     end
     object pnl2: TPanel
-      Left = 696
+      Left = 787
       Top = 1
       Width = 185
       Height = 38
@@ -102,17 +163,19 @@ object MainForm: TMainForm
         Width = 183
         Height = 20
         Align = alTop
+        Step = 1
         TabOrder = 0
       end
     end
   end
-  object pnlFileList: TPanel
-    Left = 608
+  object pnlFileList: TScrollBox
+    Left = 696
     Top = 0
-    Width = 274
-    Height = 560
+    Width = 277
+    Height = 736
     Align = alRight
-    TabOrder = 1
+    BevelOuter = bvSpace
+    TabOrder = 2
   end
   object mmMain: TMainMenu
     Left = 364
@@ -120,16 +183,16 @@ object MainForm: TMainForm
     object gototvrain1: TMenuItem
       Caption = 'go to tvrain'
     end
+    object mniDownloadAllTVRain: TMenuItem
+      Caption = #1057#1082#1072#1095#1072#1090#1100' '#1074#1089#1077' '#1088#1086#1083#1080#1082#1080
+      OnClick = mniDownloadAllTVRainClick
+    end
     object mniDownload: TMenuItem
-      Caption = 'Download and Close'
+      Caption = 'Download and GoBack'
       OnClick = mniDownloadClick
     end
     object mniLog: TMenuItem
       Caption = 'Log'
-    end
-    object mniWowMp3: TMenuItem
-      Caption = 'Get '#1054#1089#1090#1088#1086#1074' '#1075#1088#1086#1084#1072
-      OnClick = mniWowMp3Click
     end
     object mniEchoMsk: TMenuItem
       Caption = #1057#1082#1072#1095#1072#1090#1100' '#1089' '#1069#1093#1072
@@ -151,15 +214,16 @@ object MainForm: TMainForm
     Request.Ranges.Units = 'bytes'
     Request.Ranges = <>
     HTTPOptions = [hoForceEncodeParams]
-    Left = 552
+    Left = 536
+    Top = 80
   end
   object tmr1: TTimer
     Interval = 500
     OnTimer = tmr1Timer
-    Left = 572
-    Top = 4
+    Left = 636
+    Top = 92
   end
-  object XMLDocument1: TXMLDocument
+  object xmdSettings: TXMLDocument
     Left = 576
     Top = 76
     DOMVendorDesc = 'MSXML'

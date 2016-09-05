@@ -7,7 +7,8 @@ uses
   untIECompat in 'untIECompat.pas',
   untM3U in 'untM3U.pas',
   untRecode in 'untRecode.pas',
-  fmuDownloadFile in 'fmuDownloadFile.pas' {frmDownloadFile: TFrame};
+  fmuDownloadFile in 'fmuDownloadFile.pas' {frmDownloadFile: TFrame},
+  untSettings in 'untSettings.pas';
 
 {$R *.res}
 

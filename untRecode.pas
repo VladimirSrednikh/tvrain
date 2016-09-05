@@ -35,7 +35,7 @@ type
     constructor Create;
   end;
 
-procedure AddTask(APlayList: TM3UPlayList);
+function AddTask(APlayList: TM3UPlayList): Boolean;
 
 var
   DownloadList: TList<TTaskItem>;
@@ -44,21 +44,41 @@ var
 
 implementation
 
+uses untSettings;
+
 var
   cs: TCriticalSection;
 
-procedure AddTask(APlayList: TM3UPlayList);
+ function FileSize(fileName : wideString) : Int64;
+ var
+   sr : TSearchRec;
+ begin
+   if System.SysUtils.FindFirst(fileName, faAnyFile, sr ) = 0 then
+      result := Int64(sr.FindData.nFileSizeHigh) shl Int64(32) + Int64(sr.FindData.nFileSizeLow)
+   else
+      result := -1;
+
+   System.SysUtils.FindClose(sr) ;
+ end;
+
+
+function AddTask(APlayList: TM3UPlayList): Boolean;
 var
   t: TTaskItem;
 begin
   cs.Enter;
   try
+    for t in DownloadList do
+      if t.FPlayList.FPlayerId = APlayList.FPlayerId then
+        Exit(False);
+
     t := TTaskItem.Create;
     t.FPlayList := APlayList;
     t.SuccessDownloaded := False;
     t.FCurrentFile := 0;
     DownloadList.Add(t);
     Event.SetEvent;
+    Result := True;
   finally
     cs.Leave;
   end;
@@ -83,7 +103,7 @@ begin
   FillChar(st, SizeOf(st), 0);
   st.wShowWindow := SW_SHOWMINIMIZED;
   FillChar(pi, SizeOf(pi), 0);
-  CreateProcess(nil, PChar('cmd.exe  /c ' + FTempPath + 'Makefile.bat'), 0, 0, False, 0, 0,
+  CreateProcess(nil, PChar('cmd.exe  /c ' + FTempPath + 'Makefile.bat'), nil, nil, False, 0, nil,
     PChar(FTempPath), st, pi);
   // Ждать окончание процесса
   WaitForSingleObject(pi.hProcess, INFINITE);
@@ -99,11 +119,11 @@ var
 begin
   if ATask.FPlayList <> nil then
   begin
-    FDownloadPath := 'H:\Downloads\TVRain\' + ATask.FPlayList.PlayDate + '\';
+    FDownloadPath := IncludeTrailingPathDelimiter(TVRainDownloadPath) + ATask.FPlayList.PlayDate + '\';
     if not DirectoryExists(FDownloadPath) then
       TDirectory.CreateDirectory(FDownloadPath);
     //
-    FTempPath := IncludeTrailingPathDelimiter(TPath.GetTempPath) + 'Eagle-' + IntToStr(ATask.FPlayList.FEagleId) + '\';
+    FTempPath := IncludeTrailingPathDelimiter(TPath.GetTempPath) + 'Eagle-' + IntToStr(ATask.FPlayList.FPlayerId) + '\';
     if DirectoryExists(FTempPath) then
       TDirectory.Delete(FTempPath, True);
     CreateDir(FTempPath);
@@ -112,10 +132,11 @@ begin
       for I := 0 to ATask.FPlayList.TrackCount - 1 do
       begin
         DownloadFile(ATask.FPlayList.FullTrackPath(I), ATask.FPlayList.Tracks[I].FileName, FTempPath);
+        OutputDebugString(PChar(Format('download part %d, fileID %d, Size = %d', [I, ATask.FPlayList.FPlayerId, FileSize(FTempPath + ATask.FPlayList.Tracks[I].FileName)])));
         ATask.FCurrentFile := I;
       end;
       // последнюю часть также объединяем
-      TempResFile := 'Res_Eagle' + IntToStr(ATask.FPlayList.FEagleId) + '.mp4';
+      TempResFile := 'Res_Eagle' + IntToStr(ATask.FPlayList.FPlayerId) + '.mp4';
       NewFileName := Trim(FDownloadPath + Trim(ATask.FPlayList.Title)) + '.mp4';
 
       ResultFile := TFileStream.Create(FTempPath + TempResFile, fmCreate + fmOpenWrite);
@@ -124,20 +145,26 @@ begin
         begin
           TempFile := System.IOUtils.TFile.OpenRead(FTempPath + ATask.FPlayList.Tracks[I].FileName);
           try
+            OutputDebugString(PChar(Format('Copy part %d, filepath %s, FileSize = %d',
+              [I, FTempPath + ATask.FPlayList.Tracks[I].FileName, TempFile.Size])));
             TempFile.Position := 0;
             ResultFile.CopyFrom(TempFile, TempFile.Size);
+
           finally
             FreeAndNil(TempFile);
           end;
         end;
       finally
         ResultFile.Free;
+            OutputDebugString(PChar(Format('finally TempResFile %s, FileSize = %d',
+              [FTempPath + TempResFile, FileSize(FTempPath + TempResFile)])));
       end;
       if FileExists(NewFileName) then
         TFile.Delete(NewFileName);
       if FileExists(FTempPath + TempResFile) then
         TFile.Copy(FTempPath + TempResFile, NewFileName);
       ATask.SuccessDownloaded := True;
+      SavePlayList(ATask.FPlayList);
     finally
       FIdHTTP.Free;
       try

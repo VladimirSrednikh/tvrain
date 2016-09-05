@@ -2,11 +2,11 @@ object frmDownloadFile: TfrmDownloadFile
   Left = 0
   Top = 0
   Width = 270
-  Height = 57
+  Height = 44
   TabOrder = 0
   DesignSize = (
     270
-    57)
+    44)
   object imgPreview: TImage
     Left = 8
     Top = 8
@@ -15,7 +15,7 @@ object frmDownloadFile: TfrmDownloadFile
   end
   object lblFileName: TLabel
     Left = 52
-    Top = 8
+    Top = 6
     Width = 169
     Height = 13
     Anchors = [akLeft, akTop, akRight]
@@ -32,7 +32,7 @@ object frmDownloadFile: TfrmDownloadFile
   end
   object pbFile: TProgressBar
     Left = 52
-    Top = 32
+    Top = 21
     Width = 172
     Height = 17
     Anchors = [akLeft, akRight, akBottom]
