@@ -44,6 +44,7 @@ object MainForm: TMainForm
         Height = 708
         Align = alClient
         TabOrder = 0
+        Silent = True
         OnBeforeNavigate2 = ewbMainBeforeNavigate2
         OnNavigateComplete2 = ewbMainNavigateComplete2
         DisableCtrlShortcuts = 'N'
@@ -63,13 +64,20 @@ object MainForm: TMainForm
     object tsWowSound: TTabSheet
       Caption = 'WowSound'
       ImageIndex = 1
-      object wbWow: TWebBrowser
+      object wbWow: TEmbeddedWB
         Left = 0
         Top = 37
         Width = 685
         Height = 671
         Align = alClient
         TabOrder = 0
+        Silent = True
+        DisableCtrlShortcuts = 'N'
+        UserInterfaceOptions = [EnablesFormsAutoComplete, EnableThemes]
+        About = ' EmbeddedWB http://bsalsa.com/'
+        PrintOptions.HTMLHeader.Strings = (
+          '<HTML></HTML>')
+        PrintOptions.Orientation = poPortrait
         ExplicitLeft = 168
         ExplicitTop = 152
         ExplicitWidth = 300
@@ -196,10 +204,18 @@ object MainForm: TMainForm
     end
     object mniEchoMsk: TMenuItem
       Caption = #1057#1082#1072#1095#1072#1090#1100' '#1089' '#1069#1093#1072
-      OnClick = mniEchoMskClick
+      object mniEchoDownloadLast: TMenuItem
+        Caption = #1057#1082#1072#1095#1072#1090#1100' '#1087#1086#1089#1083#1077#1076#1085#1077#1077
+        OnClick = mniEchoDownloadLastClick
+      end
+      object mniEchoMakePlaylist: TMenuItem
+        Caption = #1054#1073#1085#1086#1074#1080#1090#1100' playlist'
+        OnClick = mniEchoMakePlaylistClick
+      end
     end
   end
   object IdHTTP1: TIdHTTP
+    IOHandler = IdSSLIOHandlerSocketOpenSSL1
     AllowCookies = True
     HandleRedirects = True
     ProxyParams.BasicAuthentication = False
@@ -214,8 +230,7 @@ object MainForm: TMainForm
     Request.Ranges.Units = 'bytes'
     Request.Ranges = <>
     HTTPOptions = [hoForceEncodeParams]
-    Left = 536
-    Top = 80
+    Left = 560
   end
   object tmr1: TTimer
     Interval = 500
@@ -224,8 +239,18 @@ object MainForm: TMainForm
     Top = 92
   end
   object xmdSettings: TXMLDocument
-    Left = 576
-    Top = 76
+    Left = 608
+    Top = 52
     DOMVendorDesc = 'MSXML'
+  end
+  object IdSSLIOHandlerSocketOpenSSL1: TIdSSLIOHandlerSocketOpenSSL
+    MaxLineAction = maException
+    Port = 0
+    DefaultPort = 0
+    SSLOptions.Mode = sslmUnassigned
+    SSLOptions.VerifyMode = []
+    SSLOptions.VerifyDepth = 0
+    Left = 632
+    Top = 65528
   end
 end

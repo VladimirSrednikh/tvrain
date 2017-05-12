@@ -5,7 +5,7 @@ interface
 uses
   System.Classes, System.SysUtils, Winapi.Windows, System.IOUtils,
   System.Generics.Collections, System.Generics.Defaults,
-  untM3U,IdHTTP, System.SyncObjs
+  untM3U,IdHTTP, IdSSLOpenSSL, System.SyncObjs
   ;
 
 type
@@ -22,6 +22,7 @@ type
   private
     { Private declarations }
     FIdHTTP: TIdHTTP;
+    HandlerSocket: TIdSSLIOHandlerSocketOpenSSL;
     FDownloadPath,
     FTempPath,
     FSelfPath: string;
@@ -128,11 +129,13 @@ begin
       TDirectory.Delete(FTempPath, True);
     CreateDir(FTempPath);
     FIdHTTP := TIdHTTP.Create(nil);
+    HandlerSocket := TIdSSLIOHandlerSocketOpenSSL.Create;
+    FIdHTTP.IOHandler := HandlerSocket;
     try
       for I := 0 to ATask.FPlayList.TrackCount - 1 do
       begin
         DownloadFile(ATask.FPlayList.FullTrackPath(I), ATask.FPlayList.Tracks[I].FileName, FTempPath);
-        OutputDebugString(PChar(Format('download part %d, fileID %d, Size = %d', [I, ATask.FPlayList.FPlayerId, FileSize(FTempPath + ATask.FPlayList.Tracks[I].FileName)])));
+//        OutputDebugString(PChar(Format('download part %d, fileID %d, Size = %d', [I, ATask.FPlayList.FPlayerId, FileSize(FTempPath + ATask.FPlayList.Tracks[I].FileName)])));
         ATask.FCurrentFile := I;
       end;
       // последнюю часть также объединяем
@@ -145,8 +148,8 @@ begin
         begin
           TempFile := System.IOUtils.TFile.OpenRead(FTempPath + ATask.FPlayList.Tracks[I].FileName);
           try
-            OutputDebugString(PChar(Format('Copy part %d, filepath %s, FileSize = %d',
-              [I, FTempPath + ATask.FPlayList.Tracks[I].FileName, TempFile.Size])));
+//            OutputDebugString(PChar(Format('Copy part %d, filepath %s, FileSize = %d',
+//              [I, FTempPath + ATask.FPlayList.Tracks[I].FileName, TempFile.Size])));
             TempFile.Position := 0;
             ResultFile.CopyFrom(TempFile, TempFile.Size);
 
@@ -156,8 +159,8 @@ begin
         end;
       finally
         ResultFile.Free;
-            OutputDebugString(PChar(Format('finally TempResFile %s, FileSize = %d',
-              [FTempPath + TempResFile, FileSize(FTempPath + TempResFile)])));
+//            OutputDebugString(PChar(Format('finally TempResFile %s, FileSize = %d',
+//              [FTempPath + TempResFile, FileSize(FTempPath + TempResFile)])));
       end;
       if FileExists(NewFileName) then
         TFile.Delete(NewFileName);
@@ -166,7 +169,9 @@ begin
       ATask.SuccessDownloaded := True;
       SavePlayList(ATask.FPlayList);
     finally
-      FIdHTTP.Free;
+      FIdHTTP.IOHandler := nil;
+      FreeAndNil(HandlerSocket);
+      FreeAndNil(FIdHTTP);
       try
         TDirectory.Delete(FTempPath, True);
       except

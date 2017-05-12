@@ -17,6 +17,7 @@ procedure PutIECompatible(MajorVer: Integer; CMR: TCompatibleModeRegistry);
 function FindNodeByAttrExStarts(ANode: IHTMLElement; NodeName, AttrName,
   AttrValue: string): IHTMLElement;
 
+function UrlEncode(Str: string): string;
 
 implementation
 
@@ -126,5 +127,27 @@ begin
         Exit;
     end;
 end;
+
+function UrlEncode(Str: string): string;
+var
+  i, Len: Integer;
+  Ch: Char;
+begin
+  Result:='';
+  Len:=Length(Str);
+  for i:=1 to Len do
+  begin
+    Ch:= Str[i];
+    if Ch in ['0'..'9', 'A'..'Z', 'a'..'z', '_'] then
+      Result:=Result+Ch
+    else
+    begin
+      if Ch = ' ' then Result:=Result+'+' else
+        Result:=Result + '%' + IntToHex(Ord(AnsiChar(Ch)) - Ord('0') + $30, 2)
+        //https://tvrainru.media.eagleplatform.com/api/player_data?id=709969&referrer=https%3A%2F%2Ftvrain.ru%2Flite%2Fteleshow%2Fsindeeva%2Fvayser-429533%2F
+    end;
+  end;
+end;
+
 
 end.

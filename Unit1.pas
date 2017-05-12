@@ -6,7 +6,8 @@ uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes,
   Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.Menus, Vcl.OleCtrls,
   Vcl.ComCtrls, Vcl.StdCtrls, Vcl.ExtCtrls, Vcl.Buttons,
-
+  System.DateUtils, System.Types,
+  IdIOHandler, IdIOHandlerSocket, IdIOHandlerStack, IdSSL, IdSSLOpenSSL,
   SHDocVw_EWB, EwbCore, EmbeddedWB, MSHTML_EWB, SHDocVw,
 
   IdBaseComponent, IdComponent, IdTCPConnection, IdTCPClient, IdHTTP, IdURI,
@@ -40,13 +41,16 @@ type
     xmdSettings: TXMLDocument;
     spl1: TSplitter;
     tsWowSound: TTabSheet;
-    wbWow: TWebBrowser;
+    wbWow: TEmbeddedWB;
     pnlTop: TPanel;
     edtWowURL: TEdit;
     btnGoWow: TBitBtn;
     btnDownloadWowSound: TButton;
     mniDownloadAllTVRain: TMenuItem;
     pnlFileList: TScrollBox;
+    IdSSLIOHandlerSocketOpenSSL1: TIdSSLIOHandlerSocketOpenSSL;
+    mniEchoDownloadLast: TMenuItem;
+    mniEchoMakePlaylist: TMenuItem;
     procedure FormCreate(Sender: TObject);
     procedure mniDownloadClick(Sender: TObject);
     procedure ewbMainBeforeNavigate2(ASender: TObject; const pDisp: IDispatch;
@@ -56,13 +60,14 @@ type
       var URL: OleVariant);
     procedure mniCloseClick(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
-    procedure mniEchoMskClick(Sender: TObject);
     procedure tmr1Timer(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure btnGoWowClick(Sender: TObject);
     procedure btnDownloadWowSoundClick(Sender: TObject);
     procedure tsMainShow(Sender: TObject);
     procedure mniDownloadAllTVRainClick(Sender: TObject);
+    procedure mniEchoDownloadLastClick(Sender: TObject);
+    procedure mniEchoMakePlaylistClick(Sender: TObject);
   private
     { Private declarations }
     FLog: TStringList;
@@ -75,8 +80,12 @@ type
     procedure FillPlayList(APlayList: TM3UPlayList);
     procedure ReadSettings;
     procedure SaveSettings;
-    procedure CheckTvRainIsDemo;
+    function CheckTvRainIsDemo: Boolean;
+    function VideoIsChunk: Boolean;
     procedure TvRainLogin;
+    procedure NavigateAndWait(AEWB: TEmbeddedWB; AUrl: string; ATimeout: Cardinal = 15000);
+    function URLInQueue(AUrl: string): Boolean;
+
   public
     { Public declarations }
     procedure DownloadFromWebPage(ewb1: TEmbeddedWB);
@@ -179,16 +188,19 @@ end;
 
 procedure TMainForm.btnGoWowClick(Sender: TObject);
 begin
-  wbWow.Navigate(edtWowURL.Text);
+  NavigateAndWait(wbWow, edtWowURL.Text);
 end;
 
-procedure TMainForm.CheckTvRainIsDemo;
+function TMainForm.CheckTvRainIsDemo: Boolean;
 var
-  demo: IHTMLElement;
+//  demo: IHTMLElement;
+  str: string;
 begin
-  demo := FindNodeByAttrExStarts(ewbMain.Doc2.body, 'div', 'class', 'player_notification');
-  if (demo <> nil) and ContainsText(demo.innerText, 'демо') then
-    raise Exception.Create('Нужно залогиниться!');
+//  demo := FindNodeByAttrExStarts(ewbMain.Doc2.body, 'div', 'class', 'player_notification');
+  OutputDebugString(PChar('CheckTvRainIsDemo, ReadyState = ' + inttoStr(ewbMain.ReadyState) + ' ' + ewbMain.Doc2.url));
+  str := ewbMain.Doc2.body.innerHTML;
+  Result := AnsiContainsText(str, 'Вы смотрите демо-версию');
+//  demo <> nil) and ContainsText(demo.innerText, 'демо');
 end;
 
 procedure TMainForm.DownloadFile(AURL, AFileName, ADestFolder: string);
@@ -248,6 +260,7 @@ procedure TMainForm.ewbMainNavigateComplete2(ASender: TObject;
   const pDisp: IDispatch; var URL: OleVariant);
 begin
   tsMain.Tag := 0;
+  OutputDebugString(PChar('NavigateComplete2: ' + string(URL)));
 end;
 
 procedure TMainForm.FillPlayList(APlayList: TM3UPlayList);
@@ -261,7 +274,7 @@ var
   obj: ISuperObject;
 begin
   eagleLink := 'http://tvrainru.media.eagleplatform.com/api/player_data?id=' + IntToStr(APlayList.FPlayerId) +
-    '&referrer=' + TIdURI.URLEncode(APlayList.FSourceURL);
+    '&referrer=' + URLEncode(APlayList.FSourceURL);
   // Eagle_json
   Eagle_json := GetHttpStr(eagleLink);
   APlayList.FPlayerData := Eagle_json;
@@ -281,11 +294,12 @@ begin
 //    APlayList.PlayTime := StringReplace(APlayList.PlayTime, ':', '_', [rfReplaceAll]);
 //  //  "time":"2015/08/26 15:03:47 +0300",
 //  end;
-  startpos := Pos('tvrainru.panel.eaglecdn.com', Eagle_json);
-  endpos := PosEx('"', Eagle_json, startpos);
-  SecureLink := Copy(Eagle_json, startpos, endpos - startpos);
-  if not StartsText('http://', SecureLink) then
-    SecureLink := 'http://' + SecureLink;
+//  startpos := Pos('panel.eaglecdn.com', Eagle_json);
+//  endpos := PosEx('"', Eagle_json, startpos);
+//  SecureLink := Copy(Eagle_json, startpos, endpos - startpos);
+  SecureLink := obj['data']['playlist'].A['viewports'][0]['medialist']['']['sources']['secure_m3u8']['auto'].AsString;
+  if not StartsText('https://', SecureLink) then
+    SecureLink := 'https://' + SecureLink;
   // SecureLink
   secure_link_json := GetHttpStr(SecureLink);
   APlayList.FSecureData := secure_link_json;
@@ -304,6 +318,7 @@ begin
 
     M3U_List.Text := GetHttpStr(M3ULink);
     APlayList.FM3UData := M3U_List.Text;
+    M3U_List.SaveToFile(AppFolder + 'M3U_List.txt');
     PlayListLink := '';
     for I := 0 to M3U_List.count - 1 do
       if Pos('480p.mp4', M3U_List[I]) > 0 then
@@ -353,6 +368,7 @@ var
   node: IHTMLElement;
   coll: IHTMLElementCollection;
   i: Integer;
+  Url: string;
 begin
   coll := (AEwb.Document as IHTMLDocument3).getElementsByTagName('a');
   if coll <> nil then
@@ -361,7 +377,9 @@ begin
     node := coll.item(i, 0) as IHTMLElement;    // div id="vodplayer-411021"
     if ContainsText(node.className, 'chrono_list__item') then
     begin
-      AUrls.Add(node.getAttribute('href', 0));
+      Url := node.getAttribute('href', 0);
+      if (Url <> '') and (AUrls.IndexOf(Url) = -1) then
+        AUrls.Add(Url);
     end;
   end;
 end;
@@ -377,7 +395,6 @@ begin
   FLog := TStringList.Create;
   PutIECompatible(GetIEVersionMajor, cmrCurrentUser);
   tsMain.Tag := 1;
-//  ewbMain.Navigate('http://tvrain.ru/archive/?tab=Video');
 //  chrm1.Browser.MainFrame.LoadUrl('http://tvrain.ru/teleshow/here_and_now/alkogol_budet_deshevle-393275/');
 end;
 
@@ -446,9 +463,9 @@ var
 //  Root, youtube, child,
   node: IHTMLElement;
   coll: IHTMLElementCollection;
-//  EagleId: Integer;
+  EagleId: Integer;
   I: Integer;
-//  str: string;
+  str: string;
 //  attr: OleVariant;
   Arr: TStrArray;
 begin
@@ -467,6 +484,21 @@ begin
       begin
         SetLength(AEagleList, Length(AEagleList) + 1);
         AEagleList[Length(AEagleList) - 1] := StrToInt(Arr[1]);
+      end;
+    end;
+  end;
+  if Length(AEagleList) = 0 then
+  begin //   <div class="eagleplayer" id="vodplayer-715921"
+    node := FindNodeByAttrExStarts((AEwb.Document as IHTMLDocument3).documentElement, 'div', 'class', 'eagleplayer');
+    if node <> nil then
+    begin
+      str := node.id;
+      str := StringReplace(str, 'vodplayer-', '', []);
+      EagleId := StrToIntDef(str, 0);
+      if EagleId <> 0 then
+      begin
+        SetLength(AEagleList, 1);
+        AEagleList[0] := EagleId;
       end;
     end;
   end;
@@ -575,6 +607,15 @@ begin
   Result := StringReplace(Result, '|', ' ', [rfReplaceAll]);
 end;
 
+function TMainForm.VideoIsChunk: Boolean;
+var
+  str: string;
+begin
+//div class="meta__item meta__item--fullversion"
+  str := ewbMain.Doc2.body.innerHTML;
+  Result := AnsiContainsStr(str, 'Cмотреть полную версию');
+end;
+
 procedure TMainForm.Log(AText{, AFileName}: string);
 //var
 //  SaveFile: TStringList;
@@ -646,20 +687,22 @@ begin
     pbProgressCurrent.Position := 0;
     for I := 0 to Urls.Count - 1 do
     begin
-      ewbMain.Navigate(Urls[I]);
-      While not (ewbMain.ReadyState in [READYSTATE_COMPLETE, READYSTATE_INTERACTIVE]) do
+      NavigateAndWait(ewbMain, Urls[I]);
+      if not VideoIsChunk then
+      begin
+        if CheckTvRainIsDemo then
         begin
-          Sleep(100);
-          Application.ProcessMessages;
+          TvRainLogin;
+          NavigateAndWait(ewbMain, Urls[I]);
         end;
-      CheckTvRainIsDemo;
-      DownloadFromWebPage(ewbMain);
+        DownloadFromWebPage(ewbMain);
+      end;
       pbProgressCurrent.StepBy(1);
     end;
   finally
     Urls.Free;
     pbProgressCurrent.Position := 0;
-    ewbMain.Navigate(BaseUrl);
+    NavigateAndWait(ewbMain, BaseUrl);
   end;
 end;
 
@@ -684,8 +727,7 @@ begin
   end;
 end;
 
-
-procedure TMainForm.mniEchoMskClick(Sender: TObject);
+procedure TMainForm.mniEchoDownloadLastClick(Sender: TObject);
 var
   doc: IXMLDocument;
   AStream: TMemoryStream;
@@ -767,6 +809,35 @@ begin
 //  ShowFastMMUsageTracker;
 //chrm1.Browser.ShowDevTools;
 //  chrm1.Browser.MainFrame.VisitDomProc(AddEagleToDownloaList);
+end;
+
+procedure TMainForm.mniEchoMakePlaylistClick(Sender: TObject);
+var
+  Workdir, mp3file: string;
+  dirs, files: TStringDynArray;
+  PlayList: TStringList;
+begin
+  PlayList := TStringList.Create;
+  try
+    dirs := TDirectory.GetDirectories('H:\Downloads\Echo\', '*');
+    for Workdir in dirs do
+    begin
+      files := TDirectory.GetFiles(Workdir, '*.mp3');
+      if Length(files) > 0 then
+      begin
+        PlayList.Text := '#EXTM3U';
+        for mp3file in files do
+        begin
+          PlayList.Add('#EXTINF:200,' + ExtractFileName(mp3file));
+          PlayList.Add(ExtractFileName(mp3file));
+        end;
+        PlayList.SaveToFile(Workdir + '\Echo_' + ExtractFileName(Workdir) + '.m3u');
+      end;
+    end;
+//  'H:\Downloads\Echo\' + FileDay + '\');
+  finally
+    PlayList.Free;
+  end;
 end;
 
 procedure TMainForm.ReadSettings;
@@ -860,15 +931,56 @@ end;
 procedure TMainForm.tsMainShow(Sender: TObject);
 begin
   if tsMain.Tag = 1 then
-    ewbMain.Navigate('https://tvrain.ru/archive/?tab=Video');
-    //https://tvrain.ru/archive/?search_year=2016&search_month=8&search_day=29&query=&type=&tab=Video&page=1
+//    ewbMain.Navigate('https://tvrain.ru/archive/?tab=Video');
+  ewbMain.Navigate('https://tvrain.ru/archive/?search_year=2017&search_month=2&search_day=3&query=&type=&tab=Video&page=1');
+//  ewbMain.Navigate('https://tvrain.ru/lite/teleshow/sindeeva/vayser-429533/');
+//  OutputDebugString(PChar(UrlEncode('https://tvrain.ru/lite/teleshow/sindeeva/vayser-429533/')));
+//  OutputDebugString(PChar(UrlEncode('://')));
+//  Sleep(12000);
+//  Halt;
+end;
+
+procedure TMainForm.NavigateAndWait(AEWB: TEmbeddedWB; AUrl: string; ATimeout: Cardinal = 15000);
+var
+  StartTm: TDate;
+begin
+  StartTm := GetTime;
+  AEWB.Navigate(AUrl);
+  try
+    Enabled := False;
+    while (not (AEWB.ReadyState in [READYSTATE_COMPLETE{, READYSTATE_INTERACTIVE}])) and (MilliSecondsBetween(StartTm, GetTime) < ATimeout) do
+    begin
+      Sleep(50);
+      Application.ProcessMessages;
+    end;
+  finally
+    Enabled := True;
+  end;
 end;
 
 procedure TMainForm.TvRainLogin;
+var
+  a: Variant;
+  f: IHTMLFormElement;
 begin
-  ewbMain.Navigate('https://tvrain.ru/login/');
+  NavigateAndWait(ewbMain, 'https://tvrain.ru/login/');
+  a := (ewbMain.Document as IHTMLDocument3).getElementById('User_email');
+  a.value:= 'Vladimir.Srednikh@gmail.com';
 
-YII_CSRF_TOKEN
+  a := (ewbMain.Document as IHTMLDocument3).getElementById('User_password');
+  a.value:= '3qw999asd';
+  f := (ewbMain.Document as IHTMLDocument2).forms.item('login-form', 0) as IHTMLFormElement;
+  f.submit;
+////  a.form.submit;
+//  while not (ewbMain.ReadyState in [READYSTATE_COMPLETE, READYSTATE_INTERACTIVE]) do
+//  begin
+//    Sleep(100);
+//    Application.ProcessMessages;
+//  end;
+end;
+
+function TMainForm.URLInQueue(AUrl: string): Boolean;
+begin
 
 end;
 
