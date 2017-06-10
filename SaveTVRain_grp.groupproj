@@ -1,0 +1,48 @@
+﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+    <PropertyGroup>
+        <ProjectGuid>{1A6F7B1C-0023-408C-9149-77FEA1264F45}</ProjectGuid>
+    </PropertyGroup>
+    <ItemGroup>
+        <Projects Include="SaveTVRain.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="TVRain_Downloader.dproj">
+            <Dependencies/>
+        </Projects>
+    </ItemGroup>
+    <ProjectExtensions>
+        <Borland.Personality>Default.Personality.12</Borland.Personality>
+        <Borland.ProjectType/>
+        <BorlandProject>
+            <Default.Personality/>
+        </BorlandProject>
+    </ProjectExtensions>
+    <Target Name="SaveTVRain">
+        <MSBuild Projects="SaveTVRain.dproj"/>
+    </Target>
+    <Target Name="SaveTVRain:Clean">
+        <MSBuild Projects="SaveTVRain.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="SaveTVRain:Make">
+        <MSBuild Projects="SaveTVRain.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="TVRain_Downloader">
+        <MSBuild Projects="TVRain_Downloader.dproj"/>
+    </Target>
+    <Target Name="TVRain_Downloader:Clean">
+        <MSBuild Projects="TVRain_Downloader.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="TVRain_Downloader:Make">
+        <MSBuild Projects="TVRain_Downloader.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="Build">
+        <CallTarget Targets="SaveTVRain;TVRain_Downloader"/>
+    </Target>
+    <Target Name="Clean">
+        <CallTarget Targets="SaveTVRain:Clean;TVRain_Downloader:Clean"/>
+    </Target>
+    <Target Name="Make">
+        <CallTarget Targets="SaveTVRain:Make;TVRain_Downloader:Make"/>
+    </Target>
+    <Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
+</Project>
