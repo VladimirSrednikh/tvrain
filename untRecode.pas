@@ -15,6 +15,7 @@ type
     FPlayList: TM3UPlayList;
     FCurrentFile: Integer;
     SuccessDownloaded: Boolean;
+    destructor Destroy; override;
   end;
 
 
@@ -39,7 +40,7 @@ type
 function AddTask(APlayList: TM3UPlayList): Boolean;
 
 var
-  DownloadList: TList<TTaskItem>;
+  DownloadList: TObjectList<TTaskItem>;
   Event: TEvent;
   RemakeThread: TRemakeThread;
 
@@ -257,9 +258,17 @@ end;
 
 var
   tmp_g: TGUID;
+{ TTaskItem }
+
+destructor TTaskItem.Destroy;
+begin
+  FPlayList.Free;
+  inherited;
+end;
+
 initialization
   cs := TCriticalSection.Create;
-  DownloadList := TList<TTaskItem>.Create;
+  DownloadList := TObjectList<TTaskItem>.Create;
   CreateGUID(tmp_g);
   Event := TEvent.Create(nil, False, False, GUIDToString(tmp_g));
   RemakeThread := TRemakeThread.Create;
@@ -273,6 +282,7 @@ finalization
   finally
     cs.Leave;
   end;
+  RemakeThread.Free;
   FreeAndNil(cs);
   FreeAndNil(Event);
 end.

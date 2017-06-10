@@ -2,7 +2,7 @@ object MainForm: TMainForm
   Left = 0
   Top = 0
   Caption = 'MainForm'
-  ClientHeight = 776
+  ClientHeight = 676
   ClientWidth = 973
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
@@ -20,7 +20,7 @@ object MainForm: TMainForm
   object spl1: TSplitter
     Left = 693
     Top = 0
-    Height = 736
+    Height = 636
     Align = alRight
     ExplicitLeft = 648
     ExplicitTop = 8
@@ -30,33 +30,26 @@ object MainForm: TMainForm
     Left = 0
     Top = 0
     Width = 693
-    Height = 736
+    Height = 636
     ActivePage = tsMain
     Align = alClient
     TabOrder = 0
     object tsMain: TTabSheet
       Caption = 'tsMain'
       OnShow = tsMainShow
-      object ewbMain: TEmbeddedWB
+      object ewbMain: TWebBrowser
         Left = 0
         Top = 0
         Width = 685
-        Height = 708
+        Height = 608
         Align = alClient
         TabOrder = 0
-        Silent = True
-        OnBeforeNavigate2 = ewbMainBeforeNavigate2
         OnNavigateComplete2 = ewbMainNavigateComplete2
-        DisableCtrlShortcuts = 'N'
-        UserInterfaceOptions = [EnablesFormsAutoComplete, EnableThemes]
-        About = ' EmbeddedWB http://bsalsa.com/'
-        PrintOptions.HTMLHeader.Strings = (
-          '<HTML></HTML>')
-        PrintOptions.Orientation = poPortrait
+        ExplicitHeight = 628
         ControlData = {
-          4C000000021F0000810F00000000000000000000000000000000000000000000
+          4C000000CC460000D73E00000000000000000000000000000000000000000000
           000000004C000000000000000000000001000000E0D057007335CF11AE690800
-          2B2E126208000000000000004C0000000114020000000000C000000000000046
+          2B2E12620A000000000000004C0000000114020000000000C000000000000046
           8000000000000000000000000000000000000000000000000000000000000000
           00000000000000000100000000000000000000000000000000000000}
       end
@@ -64,38 +57,14 @@ object MainForm: TMainForm
     object tsWowSound: TTabSheet
       Caption = 'WowSound'
       ImageIndex = 1
-      object wbWow: TEmbeddedWB
-        Left = 0
-        Top = 37
-        Width = 685
-        Height = 671
-        Align = alClient
-        TabOrder = 0
-        Silent = True
-        DisableCtrlShortcuts = 'N'
-        UserInterfaceOptions = [EnablesFormsAutoComplete, EnableThemes]
-        About = ' EmbeddedWB http://bsalsa.com/'
-        PrintOptions.HTMLHeader.Strings = (
-          '<HTML></HTML>')
-        PrintOptions.Orientation = poPortrait
-        ExplicitLeft = 168
-        ExplicitTop = 152
-        ExplicitWidth = 300
-        ExplicitHeight = 150
-        ControlData = {
-          4C000000CC4600005A4500000000000000000000000000000000000000000000
-          000000004C000000000000000000000001000000E0D057007335CF11AE690800
-          2B2E126208000000000000004C0000000114020000000000C000000000000046
-          8000000000000000000000000000000000000000000000000000000000000000
-          00000000000000000100000000000000000000000000000000000000}
-      end
+      ExplicitHeight = 628
       object pnlTop: TPanel
         Left = 0
         Top = 0
         Width = 685
         Height = 37
         Align = alTop
-        TabOrder = 1
+        TabOrder = 0
         DesignSize = (
           685
           37)
@@ -134,7 +103,7 @@ object MainForm: TMainForm
   end
   object pnlBottom: TPanel
     Left = 0
-    Top = 736
+    Top = 636
     Width = 973
     Height = 40
     Align = alBottom
@@ -180,7 +149,7 @@ object MainForm: TMainForm
     Left = 696
     Top = 0
     Width = 277
-    Height = 736
+    Height = 636
     Align = alRight
     BevelOuter = bvSpace
     TabOrder = 2

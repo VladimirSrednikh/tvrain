@@ -4,28 +4,19 @@ object frmWebTab: TfrmWebTab
   Width = 547
   Height = 351
   TabOrder = 0
-  object ewb1: TEmbeddedWB
+  object ewb1: TWebBrowser
     Left = 0
     Top = 37
     Width = 547
     Height = 297
     Align = alClient
     TabOrder = 0
-    Silent = False
-    OnDocumentComplete = ewb1DocumentComplete
-    DisableCtrlShortcuts = 'N'
-    UserInterfaceOptions = [EnablesFormsAutoComplete, EnableThemes]
-    About = ' EmbeddedWB http://bsalsa.com/'
-    PrintOptions.HTMLHeader.Strings = (
-      '<HTML></HTML>')
-    PrintOptions.Orientation = poPortrait
-    ExplicitTop = 76
-    ExplicitWidth = 545
-    ExplicitHeight = 257
+    OnNavigateComplete2 = ewb1NavigateComplete2
+    ExplicitHeight = 314
     ControlData = {
-      4C00000089380000742000000000000000000000000000000000000000000000
+      4C00000089380000B21E00000000000000000000000000000000000000000000
       000000004C000000000000000000000001000000E0D057007335CF11AE690800
-      2B2E126208000000000000004C0000000114020000000000C000000000000046
+      2B2E12620A000000000000004C0000000114020000000000C000000000000046
       8000000000000000000000000000000000000000000000000000000000000000
       00000000000000000100000000000000000000000000000000000000}
   end
@@ -65,8 +56,5 @@ object frmWebTab: TfrmWebTab
     Height = 17
     Align = alBottom
     TabOrder = 2
-    ExplicitLeft = 72
-    ExplicitTop = 344
-    ExplicitWidth = 150
   end
 end

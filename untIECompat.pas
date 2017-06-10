@@ -3,7 +3,7 @@ unit untIECompat;
 interface
 
 uses System.SysUtils, System.StrUtils,
-  MSHTML_EWB;
+  MSHTML;
 
 type
   TCompatibleModeRegistry = (cmrCurrentUser, cmrLocalMachine, cmrBoth);
@@ -108,7 +108,7 @@ begin
       Result := ANode
     else if SameText(AttrName, 'class') then
     begin
-      if StartsText(AttrValue, ANode.classname) then
+      if StartsText(AttrValue, ANode._classname) then
         Result := ANode;
     end
     else // для иных атрибутов

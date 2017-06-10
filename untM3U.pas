@@ -40,7 +40,8 @@ type
     FSecureData: string;
     FM3UData: string;
     FPictureLink: string;
-
+    /// <summary>Длительность в секундах </summary>
+    FDuration: Integer;
     constructor Create;
     procedure SetPlayList(APLayList: TStrings);
     function FullTrackPath(AIndex: Integer): string;

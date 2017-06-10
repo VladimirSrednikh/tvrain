@@ -1,6 +1,7 @@
 program SaveTVRain;
 
 uses
+  FastMM4,
   Vcl.Forms,
   Unit1 in 'Unit1.pas' {MainForm},
   untfrmWebTab in 'untfrmWebTab.pas' {frmWebTab: TFrame},
@@ -13,6 +14,7 @@ uses
 {$R *.res}
 
 begin
+  ReportMemoryLeaksOnShutdown := True;
   Application.Initialize;
   Application.MainFormOnTaskbar := True;
   Application.CreateForm(TMainForm, MainForm);
