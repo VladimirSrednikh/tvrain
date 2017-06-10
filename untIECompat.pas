@@ -2,7 +2,8 @@ unit untIECompat;
 
 interface
 
-uses System.SysUtils, System.StrUtils,
+uses System.SysUtils, System.StrUtils, VCL.Forms, DateUtils,
+  SHDocVw,
   MSHTML;
 
 type
@@ -18,10 +19,11 @@ function FindNodeByAttrExStarts(ANode: IHTMLElement; NodeName, AttrName,
   AttrValue: string): IHTMLElement;
 
 function UrlEncode(Str: string): string;
+procedure NavigateAndWait(AEWB: TWebBrowser; AUrl: string; ATimeout: Cardinal = 15000);
 
 implementation
 
-uses Winapi.Windows, System.Win.Registry, Vcl.Forms;
+uses Winapi.Windows, System.Win.Registry;
 
 type
   TIsWow64Process = function(hProcess: THandle; var Wow64Process: BOOL)
@@ -146,6 +148,24 @@ begin
         Result:=Result + '%' + IntToHex(Ord(AnsiChar(Ch)) - Ord('0') + $30, 2)
         //https://tvrainru.media.eagleplatform.com/api/player_data?id=709969&referrer=https%3A%2F%2Ftvrain.ru%2Flite%2Fteleshow%2Fsindeeva%2Fvayser-429533%2F
     end;
+  end;
+end;
+
+procedure NavigateAndWait(AEWB: TWebBrowser; AUrl: string; ATimeout: Cardinal = 15000);
+var
+  StartTm: TDate;
+begin
+  StartTm := GetTime;
+  AEWB.Navigate(AUrl);
+  try
+    AEWB.Enabled := False;
+    while (not (AEWB.ReadyState in [READYSTATE_COMPLETE{, READYSTATE_INTERACTIVE}])) and (MilliSecondsBetween(StartTm, GetTime) < ATimeout) do
+    begin
+      Sleep(50);
+      Application.ProcessMessages;
+    end;
+  finally
+    AEWB.Enabled := True;
   end;
 end;
 

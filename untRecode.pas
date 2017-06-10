@@ -5,7 +5,7 @@ interface
 uses
   System.Classes, System.SysUtils, Winapi.Windows, System.IOUtils,
   System.Generics.Collections, System.Generics.Defaults,
-  untM3U,IdHTTP, IdSSLOpenSSL, System.SyncObjs
+  untM3U, IdHTTP, IdSSLOpenSSL, System.SyncObjs
   ;
 
 type

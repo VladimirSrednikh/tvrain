@@ -9,7 +9,11 @@ uses
   untM3U in 'untM3U.pas',
   untRecode in 'untRecode.pas',
   fmuDownloadFile in 'fmuDownloadFile.pas' {frmDownloadFile: TFrame},
-  untSettings in 'untSettings.pas';
+  untSettings in 'untSettings.pas',
+  untTvRain in 'untTvRain.pas',
+  untEchoMskRu in 'untEchoMskRu.pas',
+  untWowHead in 'untWowHead.pas',
+  untDownloadCommon in 'untDownloadCommon.pas';
 
 {$R *.res}
 
