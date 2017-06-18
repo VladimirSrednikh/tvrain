@@ -72,7 +72,6 @@ type
     function VideoIsChunk: Boolean;
   public
     { Public declarations }
-    procedure DownloadFromWebPage(ewb1: TWebBrowser);
   end;
 
 var
@@ -125,52 +124,6 @@ procedure TMainForm.FormDestroy(Sender: TObject);
 begin
   ewbMain.OnBeforeNavigate2 := nil;
   FreeAndNil(FLog);
-end;
-
-procedure TMainForm.DownloadFromWebPage(ewb1: TWebBrowser);
-var
-  Title: string;
-  PlayList: TM3UPlayList;
-  I: Integer;
-  IDs: TArray<Integer>;
-  URL: TIdURI;
-begin
-  Title := GetTVRainTitle(ewb1);
-  SetLength(IDs, 0);
-  GetEagleIDs(ewb1, IDs);
-  for I := 0 to Length(IDs) - 1 do
-  begin
-    PlayList := TM3UPlayList.Create;
-    try
-      PlayList.Title := GetTVRainTitle(ewb1);
-      PlayList.FPlayerId := IDs[I];
-      PlayList.FSourceURL := (ewb1.Document as IHTMLDocument2).url;
-      URL := TIdURI.Create(PlayList.FSourceURL);
-      try
-        PlayList.FTVRainPath := URL.Path;
-      finally
-        URL.Free;
-      end;
-      try
-        FillPlayList(PlayList);
-      except
-        on EDemo do
-          begin
-            TvRainLogin(ewb1, FLogin, FPassword);
-            ewb1.Navigate(PlayList.FSourceURL);
-            FillPlayList(PlayList);
-          end
-        else
-          raise;
-      end;
-      if Length(IDs) > 1 then
-        PlayList.Title := PlayList.Title + ' Часть ' + IntToStr(I + 1);
-      if AddTask(PlayList) then
-        TFrmDownloadFile.CreateFrame(PlayList, pnlFileList);
-    except
-      FreeAndNil(PlayList);
-    end;
-  end;
 end;
 
 procedure TMainForm.ewbMainNavigateComplete2(ASender: TObject;
@@ -322,12 +275,12 @@ begin
     control := pgcPages.ActivePage.Controls[I];
     if control is TfrmWebTab then
     begin
-      DownloadFromWebPage((control as TfrmWebTab).ewb1);
+//      DownloadFromWebPage((control as TfrmWebTab).ewb1);
       mniCloseClick(nil);
     end
     else if control is TWebBrowser then
     begin
-      DownloadFromWebPage(control as TWebBrowser);
+//      DownloadFromWebPage(control as TWebBrowser);
       (control as TWebBrowser).GoBack;
     end
   end;
@@ -457,6 +410,9 @@ end;
 
 { TODO :
 Отслеживание прогресса скачивания - какой-то сервер, который будет принимать сообщения от другого процесса
-что-то типа "TVRainID/Title/Duration/MaxProgress/CurrentProgress" }
+что-то типа "TVRainID/Title/Duration/MaxProgress/CurrentProgress"
+      if AddTask(PlayList) then
+        TFrmDownloadFile.CreateFrame(PlayList, pnlFileList);
+}
 
 end.

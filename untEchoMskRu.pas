@@ -11,6 +11,7 @@ Uses
   ;
 
 procedure EchoDownloadFromRSS(AIdHTTP: TIdHTTP);
+// Сетевизор:    PlayListLink := 'http://team1.setevisor.tv:1935/archive/_definst_/echomsk/echomsk.rec/2015/12/echomsk-1449075780.mp4/playlist.m3u8?s=1ug854dm45slqd7mctn4s8tre0&wowzasessionid=1363426954';
 
 implementation
 

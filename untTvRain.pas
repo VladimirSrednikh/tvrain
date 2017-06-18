@@ -1,25 +1,30 @@
 unit untTvRain;
 
 interface
-uses Windows, Classes, SysUtils, StrUtils, Vcl.Forms, System.DateUtils,
+uses Windows, Classes, SysUtils, StrUtils, Vcl.Forms, System.DateUtils, System.IOUtils,
   SHDocVw, MSHTML, untIECompat,
-  IdHTTP,
+  Character,
+  IdHTTP, IdUri, IdSSLOpenSSL,
   StringFuncs,
   untM3U,
   superobject,
+  untSettings,
   untDownloadCommon
   ;
 
 type
   EDemo = class(Exception);
 
+  TM3UPlayListJson = class helper for TM3UPlayList
+  function GetAsJSON: ISuperObject;
+  end;
 
 function CheckTvRainIsDemo(AEwb: TWebBrowser): Boolean;
 procedure TvRainLogin(AEwb: TWebBrowser; ALogin, APassword: string; ATimeout: Integer = 15000);
 function GetTVRainTitle(AEwb: TWebBrowser): string;
 procedure GetEagleIDs(AEwb: TWebBrowser; var AEagleList: TArray<Integer>);
-procedure FillPlayList(APlayList: TM3UPlayList);
-
+procedure FilAllPlayLsts(ewb1: TWebBrowser; var APlayLists: TArray<TM3UPlayList>);
+procedure DownloadVideoPlayList(APlayList: TM3UPlayList);
 
 implementation
 
@@ -31,7 +36,6 @@ begin
   str := (AEwb.Document as IHTMLDocument2).body.innerHTML;
   Result := AnsiContainsText(str, 'Вы смотрите демо-версию');
 end;
-
 
 procedure TvRainLogin(AEwb: TWebBrowser; ALogin, APassword: string; ATimeout: Integer = 15000);
 var
@@ -45,21 +49,21 @@ begin
   OutputDebugStringW(PWideChar(AEwb.LocationURL));
   if not SameText(AEwb.LocationURL, 'https://tvrain.ru/login/') then
     Exit;
-
   a := (AEwb.Document as IHTMLDocument3).getElementById('User_email');
-//  if VarIsNull(a) or VarIsEmpty(a) or (TVarData(a).VPointer = nil) then
-//    Exit;
   try
     a.value:= ALogin;
+    Application.ProcessMessages;
   except
     Exit;
   end;
 
   a := (AEwb.Document as IHTMLDocument3).getElementById('User_password');
   a.value:= APassword;
+  Application.ProcessMessages;
   f := (AEwb.Document as IHTMLDocument2).forms.item('login-form', 0) as IHTMLFormElement;
   StartTm := GetTime;
   f.submit;
+  Application.ProcessMessages;
   Url := AEwb.LocationURL;
   WaitLogin := SameText(Url, 'https://tvrain.ru/login/');
   WaitLogin := WaitLogin or (AEwb.ReadyState <> READYSTATE_COMPLETE);
@@ -244,29 +248,11 @@ begin
     obj := SO(Eagle_json);
     AppFolder := IncludeTrailingPathDelimiter(ExtractFilePath(Application.ExeName));
     obj.SaveTo(AppFolder + 'player_data.txt');
-    if AnsiEndsText('трейлер', obj['data']['playlist'].o['title'].AsString) then
-      raise EDemo.Create('');
-
-  //  str := obj.S['time'];
-  //  begin
-  //    startpos := PosEx(' ', str, 1);
-  //    APlayList.PlayDate := Copy(str, 1, startpos - 1);
-  //    endpos := PosEx(' ', str, startpos + 1);
-  //    APlayList.PlayTime := Copy(str, startpos + 1, endpos - startpos - 1);
-  //    // очищаем от неподдерживаемых символов
-  //    APlayList.PlayDate := StringReplace(APlayList.PlayDate, '/', '-', [rfReplaceAll]);
-  //    if Length(APlayList.PlayDate) = Length('20151201') then
-  //      APlayList.PlayDate := Copy(APlayList.PlayDate, 1, 4) + '-' + Copy(APlayList.PlayDate, 5, 2) + '-' + Copy(APlayList.PlayDate, 7, 2);
-  //    APlayList.PlayTime := StringReplace(APlayList.PlayTime, ':', '_', [rfReplaceAll]);
-  //  //  "time":"2015/08/26 15:03:47 +0300",
-  //  end;
-  //  startpos := Pos('panel.eaglecdn.com', Eagle_json);
-  //  endpos := PosEx('"', Eagle_json, startpos);
-  //  SecureLink := Copy(Eagle_json, startpos, endpos - startpos);
+//    if AnsiEndsText('трейлер', obj['data']['playlist'].o['title'].AsString) then
+//      raise EDemo.Create('');
     SecureLink := obj['data']['playlist'].A['viewports'][0]['medialist']['']['sources']['secure_m3u8']['auto'].AsString;
     if not StartsText('https://', SecureLink) then
       SecureLink := 'https://' + SecureLink;
-    // SecureLink
     secure_link_json := GetHttpStr(SecureLink);
     APlayList.FSecureData := secure_link_json;
     obj := SO(secure_link_json);
@@ -285,7 +271,6 @@ begin
         PlayListLink := M3U_List[I]
       else if Pos('360p.mp4', M3U_List[I]) > 0 then
         PlayListLink := M3U_List[I];
-//    PlayListLink := 'http://team1.setevisor.tv:1935/archive/_definst_/echomsk/echomsk.rec/2015/12/echomsk-1449075780.mp4/playlist.m3u8?s=1ug854dm45slqd7mctn4s8tre0&wowzasessionid=1363426954';
     if PlayListLink <> '' then
     begin
       M3U_List.Text := GetHttpStr(PlayListLink);
@@ -295,10 +280,6 @@ begin
     end
     else
       raise Exception.Create('Не удалось скачать плейлист!');
-
-    // http://stream.b39.servers.eaglecdn.com/tvrainru/2015-08-26/55dd939c53e11_video_480p.mp4/index.m3u8?st=yIOV_QrZE5-ii1RobBxlnQ&e=1440621898
-    // http://stream.b39.servers.eaglecdn.com/tvrainru/2015-08-26/55dd939c53e11_video_480p.mp4/seg-1-v1-a1.ts
-//http://team1.setevisor.tv:1935/archive/_definst_/echomsk/echomsk.rec/2015/12/echomsk-1449075780.mp4/playlist.m3u8?s=1ug854dm45slqd7mctn4s8tre0&wowzasessionid=1363426954
     endpos := LastDelimiter('/', PlayListLink);
     if endpos > 0 then
       APlayList.BasePath := Copy(PlayListLink, 1, endpos)
@@ -320,6 +301,148 @@ begin
     end;
   finally
     M3U_List.Free;
+  end;
+end;
+
+procedure DownloadVideoPlayList(APlayList: TM3UPlayList);
+var
+  I: Integer;
+  TempResFile, NewFileName: string;
+  ResultFile, TempFile: TFileStream;
+
+    FIdHTTP: TIdHTTP;
+    HandlerSocket: TIdSSLIOHandlerSocketOpenSSL;
+    FDownloadPath,
+    FTempPath
+//    ,FSelfPath
+    : string;
+    FCurrentFile: Integer;
+begin
+  if APlayList <> nil then
+  begin
+    FDownloadPath := IncludeTrailingPathDelimiter(TVRainDownloadPath) + APlayList.PlayDate + '\';
+    if not DirectoryExists(FDownloadPath) then
+      TDirectory.CreateDirectory(FDownloadPath);
+    //
+    FTempPath := IncludeTrailingPathDelimiter(TPath.GetTempPath) + 'Eagle-' + IntToStr(APlayList.FPlayerId) + '\';
+    if DirectoryExists(FTempPath) then
+      TDirectory.Delete(FTempPath, True);
+    CreateDir(FTempPath);
+    FIdHTTP := TIdHTTP.Create(nil);
+    HandlerSocket := TIdSSLIOHandlerSocketOpenSSL.Create;
+    FIdHTTP.IOHandler := HandlerSocket;
+   { TODO : Notify progress Start}
+    try
+      for I := 0 to APlayList.TrackCount - 1 do
+      begin
+        DownloadFile(APlayList.FullTrackPath(I), APlayList.Tracks[I].FileName, FTempPath);
+        FCurrentFile := I;
+        { TODO : Notify progress }
+      end;
+      // последнюю часть также объединяем
+      TempResFile := 'Res_Eagle' + IntToStr(APlayList.FPlayerId) + '.mp4';
+      NewFileName := Trim(FDownloadPath + Trim(APlayList.Title)) + '.mp4';
+
+      ResultFile := TFileStream.Create(FTempPath + TempResFile, fmCreate + fmOpenWrite);
+      try
+        for I := 0 to APlayList.TrackCount - 1 do
+        begin
+          TempFile := System.IOUtils.TFile.OpenRead(FTempPath + APlayList.Tracks[I].FileName);
+          try
+            TempFile.Position := 0;
+            ResultFile.CopyFrom(TempFile, TempFile.Size);
+          finally
+            FreeAndNil(TempFile);
+          end;
+        end;
+      finally
+        ResultFile.Free;
+      end;
+      if FileExists(NewFileName) then
+        TFile.Delete(NewFileName);
+      if FileExists(FTempPath + TempResFile) then
+        TFile.Copy(FTempPath + TempResFile, NewFileName);
+      SavePlayList(APlayList);
+   { TODO : Notify progress End}
+    finally
+      FIdHTTP.IOHandler := nil;
+      FreeAndNil(HandlerSocket);
+      FreeAndNil(FIdHTTP);
+      try
+        TDirectory.Delete(FTempPath, True);
+      except
+      end;
+    end;
+  end;
+end;
+
+
+procedure FilAllPlayLsts(ewb1: TWebBrowser; var APlayLists: TArray<TM3UPlayList>);
+var
+  Title: string;
+//  PlayList: TM3UPlayList;
+  I: Integer;
+  IDs: TArray<Integer>;
+  URL: TIdURI;
+begin
+  Title := GetTVRainTitle(ewb1);
+  SetLength(IDs, 0);
+  GetEagleIDs(ewb1, IDs);
+  SetLength(APlayLists, Length(IDs));
+  for I := 0 to Length(IDs) - 1 do
+  begin
+    APlayLists[I] := TM3UPlayList.Create;
+    try
+      APlayLists[I].Title := GetTVRainTitle(ewb1);
+      APlayLists[I].FPlayerId := IDs[I];
+      APlayLists[I].FSourceURL := (ewb1.Document as IHTMLDocument2).url;
+      URL := TIdURI.Create(APlayLists[I].FSourceURL);
+      try
+        APlayLists[I].FTVRainPath := URL.Path;
+      finally
+        URL.Free;
+      end;
+      FillPlayList(APlayLists[I]);
+      if Length(IDs) > 1 then
+        APlayLists[I].Title := APlayLists[I].Title + ' Часть ' + IntToStr(I + 1);
+    finally
+//      FreeAndNil(PlayList);
+    end;
+  end;
+end;
+
+{ TM3UPlayListJson }
+
+function TM3UPlayListJson.GetAsJSON: ISuperObject;
+var
+  track: ISuperObject;
+  I: Integer;
+begin
+  Result := SO();
+  Result.I['FPlayerId'] := FPlayerId;
+  Result.S['FTVRainPath'] := FTVRainPath;
+
+  Result.S['FSourceURL'] := FSourceURL;
+  Result.S['FPlayerData'] := FPlayerData;
+  Result.S['FSecureData'] := FSecureData;
+  Result.S['FM3UData'] := FM3UData;
+  Result.S['FPictureLink'] := FPictureLink;
+  Result.I['FDuration'] := FDuration;
+
+  Result.S['BasePath'] := BasePath;
+  Result.S['Title'] := Title;
+  Result.S['PlayDate'] := PlayDate;
+  Result.S['PlayTime'] := PlayTime;
+  Result.I['TrackCount'] := TrackCount;
+  Result.O['Tracks'] := SO('[]');
+  for I := 0 to TrackCount - 1 do
+  begin
+    track := SO();
+    track.D['Duration'] := Tracks[I].Duration;
+    track.S['Title'] := Tracks[I].Title;
+    track.S['URL'] := Tracks[I].URL;
+    track.S['FileName'] := Tracks[I].FileName;
+    Result.A['Tracks'].Add(track);
   end;
 end;
 

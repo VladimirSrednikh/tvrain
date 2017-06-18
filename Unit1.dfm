@@ -37,6 +37,10 @@ object MainForm: TMainForm
     object tsMain: TTabSheet
       Caption = 'tsMain'
       OnShow = tsMainShow
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       object ewbMain: TWebBrowser
         Left = 0
         Top = 0
@@ -57,6 +61,10 @@ object MainForm: TMainForm
     object tsWowSound: TTabSheet
       Caption = 'WowSound'
       ImageIndex = 1
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       object pnlTop: TPanel
         Left = 0
         Top = 0
