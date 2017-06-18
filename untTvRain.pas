@@ -19,12 +19,14 @@ type
   function GetAsJSON: ISuperObject;
   end;
 
+  TProgressEvent = procedure(AMax, APos: Integer) of object;
+
 function CheckTvRainIsDemo(AEwb: TWebBrowser): Boolean;
 procedure TvRainLogin(AEwb: TWebBrowser; ALogin, APassword: string; ATimeout: Integer = 15000);
 function GetTVRainTitle(AEwb: TWebBrowser): string;
 procedure GetEagleIDs(AEwb: TWebBrowser; var AEagleList: TArray<Integer>);
 procedure FilAllPlayLsts(ewb1: TWebBrowser; var APlayLists: TArray<TM3UPlayList>);
-procedure DownloadVideoPlayList(APlayList: TM3UPlayList);
+procedure DownloadVideoPlayList(APlayList: TM3UPlayList; AProgressEvent: TProgressEvent);
 
 implementation
 
@@ -304,7 +306,7 @@ begin
   end;
 end;
 
-procedure DownloadVideoPlayList(APlayList: TM3UPlayList);
+procedure DownloadVideoPlayList(APlayList: TM3UPlayList; AProgressEvent: TProgressEvent);
 var
   I: Integer;
   TempResFile, NewFileName: string;
@@ -335,7 +337,10 @@ begin
     try
       for I := 0 to APlayList.TrackCount - 1 do
       begin
+        if Assigned(AProgressEvent) then
+          AProgressEvent(APlayList.TrackCount - 1, 0);
         DownloadFile(APlayList.FullTrackPath(I), APlayList.Tracks[I].FileName, FTempPath);
+
         FCurrentFile := I;
         { TODO : Notify progress }
       end;

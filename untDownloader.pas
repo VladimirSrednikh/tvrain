@@ -24,6 +24,7 @@ type
     FPassword: string;
   public
     { Public declarations }
+    procedure ProgressEvent(AMax, APos: Integer);
     procedure DownloadFile;
     procedure ReadSettings;
     procedure ExecuteNext(AFileName: string);
@@ -79,7 +80,7 @@ begin
     begin
       Caption := PlayLists[I].Title;
       Application.ProcessMessages;
-      DownloadVideoPlayList(PlayLists[I]);
+      DownloadVideoPlayList(PlayLists[I], nil);
     end;
     if FileExists(BasePath + '\Complete\' + TPath.GetFileName(fname)) then
       TFile.Delete(BasePath + '\Complete\' + TPath.GetFileName(fname));
@@ -123,6 +124,10 @@ procedure TfrmDownloader.FormCreate(Sender: TObject);
 begin
   Left := 0;
   Top := 0;
+end;
+
+procedure TfrmDownloader.ProgressEvent(AMax, APos: Integer);
+begin
 end;
 
 procedure TfrmDownloader.ReadSettings;
