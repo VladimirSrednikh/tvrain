@@ -128,6 +128,7 @@ end;
 
 procedure TfrmDownloader.ProgressEvent(AMax, APos: Integer);
 begin
+  Application.ProcessMessages;
 end;
 
 procedure TfrmDownloader.ReadSettings;

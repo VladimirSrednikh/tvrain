@@ -155,6 +155,7 @@ begin
       finally
         strs.Free;
       end;
+      SaveSettings;
     end;
   finally
     idURL.Free;
@@ -235,17 +236,16 @@ begin
         Continue;
       tvrainID := arr[Length(arr) - 1];
       if FileExists(BaseDir + 'Complete\' + tvrainID + '.json') or
-         FileExists(BaseDir + 'Download\' + tvrainID + '.json') or
-         FileExists(BaseDir + 'Download\' + tvrainID) then
+         FileExists(BaseDir + 'Download\' + tvrainID + '.json') then
         Continue;
       NavigateAndWait(ewbMain, Urls[I]);
       o := SO();
       o.S['URL'] := Urls[I];
       o.B['IsChunk'] := VideoIsChunk;
       if o.B['IsChunk'] then
-        o.SaveTo(BaseDir + 'Complete\' + tvrainID)
+        o.SaveTo(BaseDir + 'Complete\' + tvrainID + '.json')
       else
-        o.SaveTo(BaseDir + 'Download\' + tvrainID);
+        o.SaveTo(BaseDir + 'Download\' + tvrainID + '.json');
 
 //      if not VideoIsChunk then
 //      begin

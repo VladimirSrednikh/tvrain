@@ -2,7 +2,7 @@ object MainForm: TMainForm
   Left = 0
   Top = 0
   Caption = 'MainForm'
-  ClientHeight = 616
+  ClientHeight = 596
   ClientWidth = 973
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
@@ -20,7 +20,7 @@ object MainForm: TMainForm
   object spl1: TSplitter
     Left = 693
     Top = 0
-    Height = 576
+    Height = 556
     Align = alRight
     ExplicitLeft = 648
     ExplicitTop = 8
@@ -30,28 +30,24 @@ object MainForm: TMainForm
     Left = 0
     Top = 0
     Width = 693
-    Height = 576
+    Height = 556
     ActivePage = tsMain
     Align = alClient
     TabOrder = 0
     object tsMain: TTabSheet
       Caption = 'tsMain'
       OnShow = tsMainShow
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object ewbMain: TWebBrowser
         Left = 0
         Top = 0
         Width = 685
-        Height = 548
+        Height = 528
         Align = alClient
         TabOrder = 0
         OnNavigateComplete2 = ewbMainNavigateComplete2
-        ExplicitHeight = 568
+        ExplicitHeight = 548
         ControlData = {
-          4C000000CC460000A33800000000000000000000000000000000000000000000
+          4C000000CC460000923600000000000000000000000000000000000000000000
           000000004C000000000000000000000001000000E0D057007335CF11AE690800
           2B2E12620A000000000000004C0000000114020000000000C000000000000046
           8000000000000000000000000000000000000000000000000000000000000000
@@ -107,7 +103,7 @@ object MainForm: TMainForm
   end
   object pnlBottom: TPanel
     Left = 0
-    Top = 576
+    Top = 556
     Width = 973
     Height = 40
     Align = alBottom
@@ -153,7 +149,7 @@ object MainForm: TMainForm
     Left = 696
     Top = 0
     Width = 277
-    Height = 576
+    Height = 556
     Align = alRight
     BevelOuter = bvSpace
     TabOrder = 2

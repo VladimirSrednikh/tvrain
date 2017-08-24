@@ -63,12 +63,12 @@ begin
   a.value:= APassword;
   Application.ProcessMessages;
   f := (AEwb.Document as IHTMLDocument2).forms.item('login-form', 0) as IHTMLFormElement;
-  StartTm := GetTime;
   f.submit;
   Application.ProcessMessages;
   Url := AEwb.LocationURL;
   WaitLogin := SameText(Url, 'https://tvrain.ru/login/');
   WaitLogin := WaitLogin or (AEwb.ReadyState <> READYSTATE_COMPLETE);
+  StartTm := GetTime;
   while WaitLogin do
   begin
     Sleep(100);
@@ -76,7 +76,7 @@ begin
     Url := AEwb.LocationURL;
     WaitLogin := SameText(Url, 'https://tvrain.ru/login/');
     WaitLogin := WaitLogin or (AEwb.ReadyState <> READYSTATE_COMPLETE);
-    if (MilliSecondsBetween(StartTm, GetTime) < ATimeout) then
+    if (MilliSecondsBetween(StartTm, GetTime) > ATimeout) then
       raise Exception.Create('Login Timeout');
   end;
 end;
