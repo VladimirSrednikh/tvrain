@@ -11,6 +11,7 @@ object frmDownloader: TfrmDownloader
   Font.Name = 'Tahoma'
   Font.Style = []
   OldCreateOrder = False
+  WindowState = wsMinimized
   OnActivate = FormActivate
   OnCreate = FormCreate
   PixelsPerInch = 96
@@ -32,5 +33,10 @@ object frmDownloader: TfrmDownloader
       2B2E12620A000000000000004C0000000114020000000000C000000000000046
       8000000000000000000000000000000000000000000000000000000000000000
       00000000000000000100000000000000000000000000000000000000}
+  end
+  object Timer1: TTimer
+    OnTimer = Timer1Timer
+    Left = 392
+    Top = 32
   end
 end

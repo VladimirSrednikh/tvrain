@@ -54,6 +54,7 @@ var
   Buffer: array [1 .. BufferSize] of Byte;
   BufferLen: DWORD;
 begin
+  ForceDirectories(ExtractFileDir(ADestFolder + AFileName));
   FStream := TFileStream.Create(ADestFolder + AFileName, fmCreate);
   hSession := nil;
   hURL := nil;

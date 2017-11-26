@@ -2,7 +2,7 @@ object MainForm: TMainForm
   Left = 0
   Top = 0
   Caption = 'MainForm'
-  ClientHeight = 596
+  ClientHeight = 496
   ClientWidth = 973
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
@@ -20,7 +20,7 @@ object MainForm: TMainForm
   object spl1: TSplitter
     Left = 693
     Top = 0
-    Height = 556
+    Height = 456
     Align = alRight
     ExplicitLeft = 648
     ExplicitTop = 8
@@ -30,7 +30,7 @@ object MainForm: TMainForm
     Left = 0
     Top = 0
     Width = 693
-    Height = 556
+    Height = 456
     ActivePage = tsMain
     Align = alClient
     TabOrder = 0
@@ -41,13 +41,13 @@ object MainForm: TMainForm
         Left = 0
         Top = 0
         Width = 685
-        Height = 528
+        Height = 428
         Align = alClient
         TabOrder = 0
         OnNavigateComplete2 = ewbMainNavigateComplete2
-        ExplicitHeight = 548
+        ExplicitHeight = 448
         ControlData = {
-          4C000000CC460000923600000000000000000000000000000000000000000000
+          4C000000CC4600003C2C00000000000000000000000000000000000000000000
           000000004C000000000000000000000001000000E0D057007335CF11AE690800
           2B2E12620A000000000000004C0000000114020000000000C000000000000046
           8000000000000000000000000000000000000000000000000000000000000000
@@ -57,10 +57,6 @@ object MainForm: TMainForm
     object tsWowSound: TTabSheet
       Caption = 'WowSound'
       ImageIndex = 1
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object pnlTop: TPanel
         Left = 0
         Top = 0
@@ -74,7 +70,7 @@ object MainForm: TMainForm
         object edtWowURL: TEdit
           Left = 8
           Top = 8
-          Width = 470
+          Width = 265
           Height = 21
           Anchors = [akLeft, akTop, akRight, akBottom]
           TabOrder = 0
@@ -88,6 +84,7 @@ object MainForm: TMainForm
           Anchors = [akTop, akRight]
           Caption = 'Go!'
           TabOrder = 1
+          OnClick = btnGoWowClick
         end
         object btnDownloadWowSound: TButton
           Left = 562
@@ -97,13 +94,39 @@ object MainForm: TMainForm
           Anchors = [akTop, akRight]
           Caption = 'DownloadWowSound'
           TabOrder = 2
+          OnClick = btnDownloadWowSoundClick
         end
+        object btnEnumAllZones: TButton
+          Left = 400
+          Top = 6
+          Width = 81
+          Height = 25
+          Caption = 'EnumAllZones'
+          TabOrder = 3
+          OnClick = btnEnumAllZonesClick
+        end
+      end
+      object ewbWoW: TWebBrowser
+        Left = 0
+        Top = 37
+        Width = 685
+        Height = 391
+        Align = alClient
+        TabOrder = 1
+        OnNavigateComplete2 = ewbMainNavigateComplete2
+        ExplicitHeight = 411
+        ControlData = {
+          4C000000CC460000692800000000000000000000000000000000000000000000
+          000000004C000000000000000000000001000000E0D057007335CF11AE690800
+          2B2E12620A000000000000004C0000000114020000000000C000000000000046
+          8000000000000000000000000000000000000000000000000000000000000000
+          00000000000000000100000000000000000000000000000000000000}
       end
     end
   end
   object pnlBottom: TPanel
     Left = 0
-    Top = 556
+    Top = 456
     Width = 973
     Height = 40
     Align = alBottom
@@ -149,10 +172,11 @@ object MainForm: TMainForm
     Left = 696
     Top = 0
     Width = 277
-    Height = 556
+    Height = 456
     Align = alRight
     BevelOuter = bvSpace
     TabOrder = 2
+    Visible = False
   end
   object mmMain: TMainMenu
     Left = 364
@@ -199,7 +223,8 @@ object MainForm: TMainForm
     Request.Ranges.Units = 'bytes'
     Request.Ranges = <>
     HTTPOptions = [hoForceEncodeParams]
-    Left = 560
+    Left = 568
+    Top = 65528
   end
   object tmr1: TTimer
     Interval = 500
@@ -214,7 +239,7 @@ object MainForm: TMainForm
     SSLOptions.Mode = sslmUnassigned
     SSLOptions.VerifyMode = []
     SSLOptions.VerifyDepth = 0
-    Left = 632
-    Top = 65528
+    Left = 664
+    Top = 65512
   end
 end

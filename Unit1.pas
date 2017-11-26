@@ -15,6 +15,7 @@ uses
   untfrmWebTab,
   fmuDownloadFile,
   superobject
+  , untWowHead
   ;
 
 type
@@ -45,6 +46,8 @@ type
     mniEchoDownloadLast: TMenuItem;
     mniEchoMakePlaylist: TMenuItem;
     ewbMain: TWebBrowser;
+    ewbWoW: TWebBrowser;
+    btnEnumAllZones: TButton;
     procedure FormCreate(Sender: TObject);
     procedure mniDownloadClick(Sender: TObject);
     procedure mniCloseClick(Sender: TObject);
@@ -57,6 +60,9 @@ type
     procedure ewbMainNavigateComplete2(ASender: TObject; const pDisp: IDispatch;
       const URL: OleVariant);
     procedure mniEchoDownloadLastClick(Sender: TObject);
+    procedure btnGoWowClick(Sender: TObject);
+    procedure btnDownloadWowSoundClick(Sender: TObject);
+    procedure btnEnumAllZonesClick(Sender: TObject);
   private
     { Private declarations }
     FLog: TStringList;
@@ -124,6 +130,50 @@ procedure TMainForm.FormDestroy(Sender: TObject);
 begin
   ewbMain.OnBeforeNavigate2 := nil;
   FreeAndNil(FLog);
+end;
+
+procedure TMainForm.btnDownloadWowSoundClick(Sender: TObject);
+begin
+  Screen.Cursor := crHourGlass;
+  Self.Cursor := crHourGlass;
+  try
+    DownloadWowSound(ewbWoW, 'F:\Music\Soundtracks\Games\WoW\ZoneMusic\', pbProgressCurrent);
+  finally
+    Screen.Cursor := crDefault;
+    Self.Cursor := crDefault;
+  end;
+end;
+
+procedure TMainForm.btnEnumAllZonesClick(Sender: TObject);
+var
+  zonei: Integer;
+  I: Integer;
+  WowFiles: ISuperObject;
+  filename: string;
+begin
+  filename := ExtractFileDir(Application.ExeName) + '\WowSound.json';
+  if FileExists(filename) then
+    WowFiles := TSuperObject.ParseFile(filename, True)
+  else
+    WowFiles := SO('{Zone:[], Files:[]}');
+//  for I := 1 to 999 do
+  for I := 1 to 1 do
+  begin
+    IdHTTP1.HandleRedirects := True;
+    IdHTTP1.Head('http://www.wowhead.com/zone=' + IntToStr(I));
+//    if not AnsiContainsText(IdHTTP1.request.URL, 'zones?notFound') then
+      begin
+        NavigateAndWait(ewbWow, 'http://www.wowhead.com/zone=' + IntToStr(I));
+        AddWowFiles(ewbWow, WowFiles);
+        WowFiles.SaveTo(filename, True, True);
+      end;
+    Sleep(1000);
+  end;
+end;
+
+procedure TMainForm.btnGoWowClick(Sender: TObject);
+begin
+  ewbWoW.Navigate(edtWowURL.Text);
 end;
 
 procedure TMainForm.ewbMainNavigateComplete2(ASender: TObject;

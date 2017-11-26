@@ -4,24 +4,27 @@ interface
 
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
-  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.OleCtrls, SHDocVw,
+  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.OleCtrls, SHDocVw, strutils,
   System.IOUtils, System.IniFiles, System.Types, MSHTML,
   IdURI,
   untTvRain,
   untSettings,
   untIECompat,
   untM3U,
-  superobject;
+  superobject, System.Win.TaskbarCore, Vcl.Taskbar, Vcl.ExtCtrls;
 
 type
   TfrmDownloader = class(TForm)
     WebBrowser1: TWebBrowser;
+    Timer1: TTimer;
     procedure FormCreate(Sender: TObject);
     procedure FormActivate(Sender: TObject);
+    procedure Timer1Timer(Sender: TObject);
   private
     { Private declarations }
     FLogin,
     FPassword: string;
+    function IsPlayListDemo(APlayList: ISuperObject): Boolean;
   public
     { Public declarations }
     procedure ProgressEvent(AMax, APos: Integer);
@@ -45,6 +48,7 @@ var
   o: ISuperObject;
   PlayLists: TArray<TM3UPlayList>;
   i: Integer;
+  IsDemo: Boolean;
   filearr: TStringDynArray;
 begin
   ReadSettings;
@@ -67,14 +71,30 @@ begin
     o := TSuperObject.ParseFile(fname, True);
     if o.B['IsChunk'] then
       Exit;
-    TvRainLogin(WebBrowser1, FLogin, FPassword);
-    NavigateAndWait(WebBrowser1, o.S['URL']);
-    FilAllPlayLsts(WebBrowser1, PlayLists);
-    o.O['playlist'] :=  SO('[]');
-
-    for I := 0 to Length(PlayLists) - 1 do
-      o.A['playlist'].Add(PlayLists[I].GetAsJSON);
-
+    repeat
+      TvRainLogin(WebBrowser1, FLogin, FPassword);
+      for I := 1 to 10 do  // ∆дать 1 сек.
+      begin
+        Sleep(100);
+        Application.ProcessMessages;
+      end;
+      NavigateAndWait(WebBrowser1, o.S['URL']);
+      IsDemo := CheckTvRainIsDemo(WebBrowser1);
+      if not IsDemo then
+      begin
+        FilAllPlayLsts(WebBrowser1, PlayLists);
+        o.O['playlist'] :=  SO('[]');
+        for I := 0 to Length(PlayLists) - 1 do
+          o.A['playlist'].Add(PlayLists[I].GetAsJSON);
+        for I := 0 to o.A['playlist'].Length - 1 do
+          if IsPlayListDemo(o.A['playlist'].O[I]) then
+          begin
+            o.A['playlist'].Clear(True);
+            IsDemo := True;
+            Break;
+          end;
+      end;
+    until (not IsDemo);
     o.SaveTo(fname);
     for I := 0 to Length(PlayLists) - 1 do
     begin
@@ -126,6 +146,25 @@ begin
   Top := 0;
 end;
 
+function TfrmDownloader.IsPlayListDemo(APlayList: ISuperObject): Boolean;
+var
+  s: string;
+  PlayerData: ISuperObject;
+begin
+  Result := False;
+  if (APlayList.O['FPlayerData'] <> nil) then
+  begin
+    try
+      PlayerData := SO(APlayList.S['FPlayerData']);
+      if (PlayerData.O['data'] <> nil) and (PlayerData.O['data'].O['playlist'] <> nil) then
+      s := PlayerData.O['data'].O['playlist'].S['title'];
+      if EndsText('демо', s) then
+        Result := True;
+    except
+    end;
+  end;
+end;
+
 procedure TfrmDownloader.ProgressEvent(AMax, APos: Integer);
 begin
   Application.ProcessMessages;
@@ -145,6 +184,18 @@ begin
   finally
     ini.Free;
   end;
+end;
+
+procedure TfrmDownloader.Timer1Timer(Sender: TObject);
+begin
+//  Taskbar1.ProgressValue := Taskbar1.ProgressValue + 1;
+//  if Taskbar1.ProgressValue = Taskbar1.ProgressMaxValue then
+//  begin
+//    Taskbar1.ProgressState := TTaskBarProgressState.Paused;
+//    Timer1.Enabled := False;
+//  end
+//  else
+//    Taskbar1.ProgressState := TTaskBarProgressState.Normal;
 end;
 
 end.

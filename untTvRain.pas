@@ -311,14 +311,11 @@ var
   I: Integer;
   TempResFile, NewFileName: string;
   ResultFile, TempFile: TFileStream;
-
-    FIdHTTP: TIdHTTP;
-    HandlerSocket: TIdSSLIOHandlerSocketOpenSSL;
-    FDownloadPath,
-    FTempPath
-//    ,FSelfPath
-    : string;
-    FCurrentFile: Integer;
+  FIdHTTP: TIdHTTP;
+  HandlerSocket: TIdSSLIOHandlerSocketOpenSSL;
+  FDownloadPath,
+  FTempPath: string;
+//  FCurrentFile: Integer;
 begin
   if APlayList <> nil then
   begin
@@ -341,7 +338,7 @@ begin
           AProgressEvent(APlayList.TrackCount - 1, 0);
         DownloadFile(APlayList.FullTrackPath(I), APlayList.Tracks[I].FileName, FTempPath);
 
-        FCurrentFile := I;
+//        FCurrentFile := I;
         { TODO : Notify progress }
       end;
       // последнюю часть также объединяем
@@ -398,7 +395,7 @@ begin
   begin
     APlayLists[I] := TM3UPlayList.Create;
     try
-      APlayLists[I].Title := GetTVRainTitle(ewb1);
+      APlayLists[I].Title := Copy(GetTVRainTitle(ewb1), 1, 130);
       APlayLists[I].FPlayerId := IDs[I];
       APlayLists[I].FSourceURL := (ewb1.Document as IHTMLDocument2).url;
       URL := TIdURI.Create(APlayLists[I].FSourceURL);
@@ -409,7 +406,7 @@ begin
       end;
       FillPlayList(APlayLists[I]);
       if Length(IDs) > 1 then
-        APlayLists[I].Title := APlayLists[I].Title + ' Часть ' + IntToStr(I + 1);
+        APlayLists[I].Title := Copy(APlayLists[I].Title, 1, 121) + ' Часть ' + IntToStr(I + 1);
     finally
 //      FreeAndNil(PlayList);
     end;

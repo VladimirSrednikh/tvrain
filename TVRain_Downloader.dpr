@@ -13,7 +13,7 @@ uses
 
 begin
   Application.Initialize;
-  Application.MainFormOnTaskbar := False;
+  Application.MainFormOnTaskbar := True;
   Application.CreateForm(TfrmDownloader, frmDownloader);
   Application.ShowMainForm := False;
   PutIECompatible(GetIEVersionMajor, cmrCurrentUser);

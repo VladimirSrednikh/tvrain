@@ -44,6 +44,7 @@ procedure EchoDownloadFromRSS(AIdHTTP: TIdHTTP);
 var
   doc: IXMLDocument;
   AStream: TMemoryStream;
+  NewFile: TFileStream;
   root, item: IXMLNode;
   I: Integer;
   Arr: TStrArray;
@@ -79,7 +80,7 @@ begin
             if SameText('bigecho', Arr[3]) or SameText('classicrock', Arr[3])
               or SameText('odna', Arr[3]) or SameText('risk', Arr[3])
               or SameText('vinil', Arr[3]) or SameText('peskov', Arr[3])
-              or SameText('unpast', Arr[3]) or SameText('buntman', Arr[3])
+              or SameText('unpast', Arr[3])
               or SameText('farm', Arr[3]) or SameText('apriscatole', Arr[3])
               or SameText('moscowtravel', Arr[3]) or SameText('speakrus', Arr[3])
               or SameText('orders', Arr[3]) or SameText('kazino', Arr[3])
@@ -93,10 +94,15 @@ begin
               or SameText('znamenatel', Arr[3]) or SameText('arsenal', Arr[3])
               or SameText('football', Arr[3]) or SameText('galopom', Arr[3])
               or SameText('autorsong', Arr[3]) or SameText('tabel', Arr[3])
-              or SameText('kid', Arr[3]) or SameText('just', Arr[3])
-              or SameText('radiodetaly', Arr[3]) or SameText('keys', Arr[3])
+              or AnsiContainsText(Filename, 'buntman') or AnsiContainsText(Filename, 'just')
+              or AnsiContainsText(Filename, 'kid') or AnsiContainsText(Filename, 'just')
+              or AnsiContainsText(Filename, 'keys') or AnsiContainsText(Filename, 'radiodetaly')
               or SameText('blogout1', Arr[3]) or SameText('beatles', Arr[3])
               or SameText('bombard', Arr[3]) or SameText('', Arr[3])
+              or AnsiContainsText(Filename, 'garage') or AnsiContainsText(Filename, 'dream')
+              or AnsiContainsText(Filename, 'blokadagolosa') or AnsiContainsText(Filename, 'victory')
+              or AnsiContainsText(Filename, 'help')
+              or AnsiContainsText(Filename, '-0805.mp3')
   //            or SameText('', Arr[3]) or SameText('', Arr[3])
             then
               Continue;
@@ -116,6 +122,18 @@ begin
               6: NewFilename := Format('%s_%s_%s-%s.mp3', [Arr[0] + '-' + FileDay, Arr[5], Arr[3], Arr[4]]);
               else
                 NewFilename := Filename + '.mp3';
+            end;
+            // Если есть уже такой файл с таким размером, то пропускаем
+            if TFile.Exists('H:\Downloads\Echo\' + FileDay + '\' + NewFilename) then
+            begin
+              NewFile := TFileStream.Create('H:\Downloads\Echo\' + FileDay + '\' + NewFilename, fmOpenRead);
+              try
+                AIdHTTP.Head(URL);
+                if AIdHTTP.Response.ContentLength = NewFile.Size then
+                  Continue;
+              finally
+                NewFile.Free;
+              end;
             end;
             DownloadFile(AIdHTTP, URL, NewFilename, 'H:\Downloads\Echo\' + FileDay + '\');
           end;
