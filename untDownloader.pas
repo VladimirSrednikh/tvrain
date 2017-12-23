@@ -44,69 +44,68 @@ implementation
 
 procedure TfrmDownloader.DownloadFile;
 var
-  fname, BasePath, dir, nextfile: string;
+  fname, BasePath, nextfile: string;
   o: ISuperObject;
   PlayLists: TArray<TM3UPlayList>;
-  i: Integer;
+  i, demoi: Integer;
   IsDemo: Boolean;
   filearr: TStringDynArray;
 begin
   ReadSettings;
   fname := ParamStr(1);
   try
+    BasePath := TPath.GetDirectoryName(Application.ExeName);
     if (fname = '') or not FileExists(fname) then
     begin
-      BasePath := TPath.GetDirectoryName(Application.ExeName);
       filearr := TDirectory.GetFiles(BasePath + '\Download');
       if Length(filearr) > 0 then
         fname := filearr[0]
       else
         Exit;
     end;
-    BasePath := TPath.GetDirectoryName(fname);
-    dir := TPath.GetFileName(BasePath);
-    BasePath := TPath.GetDirectoryName(BasePath);
-    if SameText(dir, 'Complete') then
-      Exit;
     o := TSuperObject.ParseFile(fname, True);
-    if o.B['IsChunk'] then
-      Exit;
-    repeat
-      TvRainLogin(WebBrowser1, FLogin, FPassword);
-      for I := 1 to 10 do  // ∆дать 1 сек.
-      begin
-        Sleep(100);
-        Application.ProcessMessages;
-      end;
-      NavigateAndWait(WebBrowser1, o.S['URL']);
-      IsDemo := CheckTvRainIsDemo(WebBrowser1);
-      if not IsDemo then
-      begin
-        FilAllPlayLsts(WebBrowser1, PlayLists);
-        o.O['playlist'] :=  SO('[]');
-        for I := 0 to Length(PlayLists) - 1 do
-          o.A['playlist'].Add(PlayLists[I].GetAsJSON);
-        for I := 0 to o.A['playlist'].Length - 1 do
-          if IsPlayListDemo(o.A['playlist'].O[I]) then
-          begin
-            o.A['playlist'].Clear(True);
-            IsDemo := True;
-            Break;
-          end;
-      end;
-    until (not IsDemo);
-    o.SaveTo(fname);
-    for I := 0 to Length(PlayLists) - 1 do
+    if not o.B['IsChunk'] then
     begin
-      Caption := PlayLists[I].Title;
-      Application.ProcessMessages;
-      DownloadVideoPlayList(PlayLists[I], nil);
+      for demoi := 1 to 2 do   // даю 2-ю попытку если с логином что-то пошло не так.
+      begin
+        TvRainLogin(WebBrowser1, FLogin, FPassword);
+        for I := 1 to 10 do  // ∆дать 1 сек.
+        begin
+          Sleep(100);
+          Application.ProcessMessages;
+        end;
+        NavigateAndWait(WebBrowser1, o.S['URL']);
+        IsDemo := CheckTvRainIsDemo(WebBrowser1);
+        if not IsDemo then
+        begin
+          FillAllPlayLists(WebBrowser1, PlayLists);
+          o.O['playlist'] :=  SO('[]');
+          for I := 0 to Length(PlayLists) - 1 do
+            o.A['playlist'].Add(PlayLists[I].GetAsJSON);
+          for I := 0 to o.A['playlist'].Length - 1 do
+            if IsPlayListDemo(o.A['playlist'].O[I]) then
+            begin
+              o.A['playlist'].Clear(True);
+              IsDemo := True;
+              Break;
+            end;
+        end;
+        if not IsDemo then
+          Break;
+      end;
+      o.SaveTo(fname);
+      for I := 0 to Length(PlayLists) - 1 do
+      begin
+        Caption := PlayLists[I].Title;
+        Application.ProcessMessages;
+        DownloadVideoPlayList(PlayLists[I], nil);
+      end;
     end;
     if FileExists(BasePath + '\Complete\' + TPath.GetFileName(fname)) then
       TFile.Delete(BasePath + '\Complete\' + TPath.GetFileName(fname));
     TFile.Move(fname, BasePath + '\Complete\' + TPath.GetFileName(fname));
   finally
-    filearr := TDirectory.GetFiles(TPath.GetDirectoryName(fname));
+    filearr := TDirectory.GetFiles(BasePath + '\Download');
     if Length(filearr) > 0 then
     begin
       nextfile := filearr[0];

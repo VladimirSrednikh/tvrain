@@ -365,6 +365,7 @@ begin
       end;
     end;
 //  'H:\Downloads\Echo\' + FileDay + '\');
+    // TODO: перенести в настройки
   finally
     PlayList.Free;
   end;

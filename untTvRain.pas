@@ -25,7 +25,7 @@ function CheckTvRainIsDemo(AEwb: TWebBrowser): Boolean;
 procedure TvRainLogin(AEwb: TWebBrowser; ALogin, APassword: string; ATimeout: Integer = 15000);
 function GetTVRainTitle(AEwb: TWebBrowser): string;
 procedure GetEagleIDs(AEwb: TWebBrowser; var AEagleList: TArray<Integer>);
-procedure FilAllPlayLsts(ewb1: TWebBrowser; var APlayLists: TArray<TM3UPlayList>);
+procedure FillAllPlayLists(ewb1: TWebBrowser; var APlayLists: TArray<TM3UPlayList>);
 procedure DownloadVideoPlayList(APlayList: TM3UPlayList; AProgressEvent: TProgressEvent);
 
 implementation
@@ -324,6 +324,8 @@ begin
       TDirectory.CreateDirectory(FDownloadPath);
     //
     FTempPath := IncludeTrailingPathDelimiter(TPath.GetTempPath) + 'Eagle-' + IntToStr(APlayList.FPlayerId) + '\';
+    if not DirectoryExists(FTempPath) then
+      CreateDir(FTempPath);
     if DirectoryExists(FTempPath) then
       TDirectory.Delete(FTempPath, True);
     CreateDir(FTempPath);
@@ -373,13 +375,12 @@ begin
       try
         TDirectory.Delete(FTempPath, True);
       except
-      end;
     end;
   end;
 end;
 
 
-procedure FilAllPlayLsts(ewb1: TWebBrowser; var APlayLists: TArray<TM3UPlayList>);
+procedure FillAllPlayLists(ewb1: TWebBrowser; var APlayLists: TArray<TM3UPlayList>);
 var
   Title: string;
 //  PlayList: TM3UPlayList;
