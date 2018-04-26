@@ -6,8 +6,7 @@ Uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes,
   System.IOUtils, System.StrUtils, System.DateUtils,
   IdHTTP, IdGlobalProtocols,
-  Xml.xmldom, Xml.XMLIntf, Xml.XMLDoc, Xml.Win.msxmldom,
-  StringFuncs
+  Xml.xmldom, Xml.XMLIntf, Xml.XMLDoc, Xml.Win.msxmldom
   ;
 
 procedure EchoDownloadFromRSS(AIdHTTP: TIdHTTP);
@@ -47,8 +46,8 @@ var
   NewFile: TFileStream;
   root, item: IXMLNode;
   I: Integer;
-  Arr: TStrArray;
-  URL, Filename, NewFilename, FileDay, ProgramName, FileTime: string;
+  Arr: TArray<string>;
+  URL, Filename, NewFilename, FileDay, ProgramName, FileTime, Title: string;
   dt: TDate;
   tf: TFormatSettings;
 begin
@@ -71,11 +70,12 @@ begin
         try
           item := root.ChildNodes.Get(I);
           URL := item.ChildValues['guid'];
+          Title := item.ChildValues['title'];
           if URL <> '' then //<guid>http://cdn.echo.msk.ru/snd/2015-10-11-razvorot-morning-0706.mp3</guid>
           begin
             Filename := Copy(URL, LastDelimiter('/', URL) + 1, Length(URL));
             Filename := ReplaceStr(Filename, '.mp3', '');
-            DecomposeText(Arr, '-', Filename); //2015-10-04-tabel-2005
+            Arr := Filename.Split(['-']); //2015-10-04-tabel-2005
             if Length(Arr) >= 3 then
             if SameText('bigecho', Arr[3]) or SameText('classicrock', Arr[3])
               or SameText('odna', Arr[3]) or SameText('risk', Arr[3])
@@ -101,8 +101,10 @@ begin
               or SameText('bombard', Arr[3]) or SameText('', Arr[3])
               or AnsiContainsText(Filename, 'garage') or AnsiContainsText(Filename, 'dream')
               or AnsiContainsText(Filename, 'blokadagolosa') or AnsiContainsText(Filename, 'victory')
-              or AnsiContainsText(Filename, 'help')
+              or AnsiContainsText(Filename, 'help') or AnsiContainsText(Filename, 'dalvostok')
               or AnsiContainsText(Filename, '-0805.mp3')
+              or AnsiContainsText(Title, 'Интервью : Колыбельная') or AnsiContainsText(Title, 'Интервью : Для Самых Больших')
+              or AnsiContainsText(Title, 'Особое мнение : Особое мнение СПб')
   //            or SameText('', Arr[3]) or SameText('', Arr[3])
             then
               Continue;
