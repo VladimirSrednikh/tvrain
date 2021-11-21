@@ -5,7 +5,6 @@ uses Windows, Classes, SysUtils, StrUtils, Vcl.Forms, System.DateUtils, System.I
   SHDocVw, MSHTML, untIECompat,
   Character,
   IdHTTP, IdUri, IdSSLOpenSSL,
-  StringFuncs,
   untM3U,
   superobject,
   untSettings,
@@ -114,7 +113,7 @@ var
   I: Integer;
   str: string;
 //  attr: OleVariant;
-  Arr: TStrArray;
+  Arr: TArray<string>;
 begin
   SetLength(AEagleList, 0);
 //  Root := FindNodeByAttrExStarts((AEwb.Document as IHTMLDocument3).documentElement, 'div', 'class', 'main-data-nest');
@@ -125,7 +124,7 @@ begin
     node := coll.item(i, 0) as IHTMLElement;    // div id="vodplayer-411021"
     if StartsText('vodplayer-', node.id) or StartsText('eagleplayer-', node.id) then
     begin
-      DecomposeText(Arr, '-', node.id);
+      Arr := string(node.id).Split(['-']);
       if (Length(Arr) > 1) and (StrToIntDef(Arr[1], 0) <> 0) then
       if not ((Length(AEagleList) <> 0) and (AEagleList[Length(AEagleList) - 1] = StrToInt(Arr[1]))) then
       begin
@@ -315,7 +314,6 @@ var
   HandlerSocket: TIdSSLIOHandlerSocketOpenSSL;
   FDownloadPath,
   FTempPath: string;
-//  FCurrentFile: Integer;
 begin
   if APlayList <> nil then
   begin
@@ -375,6 +373,7 @@ begin
       try
         TDirectory.Delete(FTempPath, True);
       except
+      end;
     end;
   end;
 end;
@@ -383,7 +382,6 @@ end;
 procedure FillAllPlayLists(ewb1: TWebBrowser; var APlayLists: TArray<TM3UPlayList>);
 var
   Title: string;
-//  PlayList: TM3UPlayList;
   I: Integer;
   IDs: TArray<Integer>;
   URL: TIdURI;
@@ -395,22 +393,18 @@ begin
   for I := 0 to Length(IDs) - 1 do
   begin
     APlayLists[I] := TM3UPlayList.Create;
+    APlayLists[I].Title := Copy(GetTVRainTitle(ewb1), 1, 130);
+    APlayLists[I].FPlayerId := IDs[I];
+    APlayLists[I].FSourceURL := (ewb1.Document as IHTMLDocument2).url;
+    URL := TIdURI.Create(APlayLists[I].FSourceURL);
     try
-      APlayLists[I].Title := Copy(GetTVRainTitle(ewb1), 1, 130);
-      APlayLists[I].FPlayerId := IDs[I];
-      APlayLists[I].FSourceURL := (ewb1.Document as IHTMLDocument2).url;
-      URL := TIdURI.Create(APlayLists[I].FSourceURL);
-      try
-        APlayLists[I].FTVRainPath := URL.Path;
-      finally
-        URL.Free;
-      end;
-      FillPlayList(APlayLists[I]);
-      if Length(IDs) > 1 then
-        APlayLists[I].Title := Copy(APlayLists[I].Title, 1, 121) + ' Часть ' + IntToStr(I + 1);
+      APlayLists[I].FTVRainPath := URL.Path;
     finally
-//      FreeAndNil(PlayList);
+      URL.Free;
     end;
+    FillPlayList(APlayLists[I]);
+    if Length(IDs) > 1 then
+      APlayLists[I].Title := Copy(APlayLists[I].Title, 1, 121) + ' Часть ' + IntToStr(I + 1);
   end;
 end;
 
