@@ -88,7 +88,6 @@ implementation
 {$R *.dfm}
 
 uses
-  StringFuncs,
   untSettings, untTvRain, untEchoMskRu,
   untIECompat, EwbTools, untRecode;
 
@@ -146,7 +145,6 @@ end;
 
 procedure TMainForm.btnEnumAllZonesClick(Sender: TObject);
 var
-  zonei: Integer;
   I: Integer;
   WowFiles: ISuperObject;
   filename: string;

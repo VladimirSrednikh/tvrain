@@ -1,7 +1,9 @@
 program SaveTVRain;
 
 uses
+  {$IFDEF FASTMM}
   FastMM4,
+  {$ENDIF }
   Vcl.Forms,
   Unit1 in 'Unit1.pas' {MainForm},
   untfrmWebTab in 'untfrmWebTab.pas' {frmWebTab: TFrame},

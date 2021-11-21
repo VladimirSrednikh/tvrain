@@ -5,14 +5,11 @@ interface
 Uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes,
   System.IOUtils, System.StrUtils, System.DateUtils,
-  Vcl.ComCtrls, VCL.Forms,
+  Vcl.ComCtrls, Vcl.Forms,
   IdHTTP, IdGlobalProtocols,
   Xml.xmldom, Xml.XMLIntf, Xml.XMLDoc, Xml.Win.msxmldom,
-  StringFuncs,
   SHDocVw, MSHTML,
-  superobject
-  , untDownloadCommon
-  ;
+  superobject, untDownloadCommon;
 
 procedure DownloadWowSound(AwbWow: TWebBrowser; ADestination: string; AProgress: TProgressBar);
 procedure AddWowFiles(AwbWow: TWebBrowser; AWowFiles: ISuperObject);
@@ -31,15 +28,15 @@ var
 begin
   if AwbWow.Document = nil then
     Exit;
-  Title := (AwbWow.Document as IHTMLDocument2).title;
+  Title := (AwbWow.Document as IHTMLDocument2).Title;
   Title := Trim(Copy(Title, 1, Pos(' -', Title)));
   Title := ReplaceStr(Title, ':', ' ');
   Title := ReplaceStr(Title, '"', '_');
   Title := ReplaceStr(Title, '''', '_');
 
-  if Title = ''  then
+  if Title = '' then
     Title := 'UnknownZone';
-  Url := (AwbWow.Document as IHTMLDocument2).url;
+  Url := (AwbWow.Document as IHTMLDocument2).Url;
   ipos := Pos('zone=', Url);
   if ipos > 0 then
   begin
@@ -60,7 +57,7 @@ begin
     else
     begin
       zonetext := node.innerHTML;
-      ipos := Pos('Zone ID:', zonetext); //      Zone ID: 7543<
+      ipos := Pos('Zone ID:', zonetext); // Zone ID: 7543<
       if ipos = 0 then
         ZoneID := 'unknown Id'
       else
@@ -81,50 +78,50 @@ begin
   if node <> nil then
     parentnode := node.parentElement;
   if parentnode <> nil then
-  for I := 0 to (parentnode.children as IHTMLElementCollection).length - 1 do
-  begin
-    script := (parentnode.children as IHTMLElementCollection).item(I, 0) as IHTMLElement;
-    if SameText(script.tagName, 'div') then
-      SubTitle := script.id
+    for I := 0 to (parentnode.children as IHTMLElementCollection).Length - 1 do
+    begin
+      script := (parentnode.children as IHTMLElementCollection).item(I, 0) as IHTMLElement;
+      if SameText(script.tagName, 'div') then
+        SubTitle := script.ID
     else
     if SameText(script.tagName, 'script') and not SameText('zonemusicdiv-soundambience', SubTitle) then
-    begin
-      scripttext := script.innerHTML;
-      ipos := Pos('[{', scripttext);
-      scripttext := Copy(scripttext, ipos, Length(scripttext));
-      ipos := Pos('}]', scripttext);
-      scripttext := Copy(scripttext, 1, ipos + 2);
-      obj := SO(scripttext);
-      obj.SaveTo('C:\Users\User\Documents\Embarcadero\Studio\Projects\tvrain\Bin\Wow_zone.json', True, False);
-      try
-        len := obj.AsArray.Length;
-        AProgress.Position := 0;
-        AProgress.Max := Len;
-        OutputDebugString(PChar('Len = ' + IntToStr(AProgress.Max)));
-        Application.ProcessMessages;
-        for soundI := 0 to len - 1 do
-        begin
-          ID := obj.AsArray[soundI].S['id'];
-          ID := StringReplace(ID, #10, '', [rfReplaceAll]);
-          ID := StringReplace(ID, #13, '', [rfReplaceAll]);
-          Url := 'http://wowimg.zamimg.com/wowsounds/' + ID;
-          if ContainsText(obj.AsArray[soundI].S['type'], 'ogg') then
-            ext := '.ogg'
-          else
-            ext := '.mp3';
-          fname := obj.AsArray[soundI].S['title'] + '_' + ID + ext;
-          fname := StringReplace(fname, #10, '', [rfReplaceAll]);
-          fname := StringReplace(fname, #13, '', [rfReplaceAll]);
-          AProgress.Position := soundI;
+      begin
+        scripttext := script.innerHTML;
+        ipos := Pos('[{', scripttext);
+        scripttext := Copy(scripttext, ipos, Length(scripttext));
+        ipos := Pos('}]', scripttext);
+        scripttext := Copy(scripttext, 1, ipos + 2);
+        obj := SO(scripttext);
+        obj.SaveTo('C:\Users\User\Documents\Embarcadero\Studio\Projects\tvrain\Bin\Wow_zone.json', True, False);
+        try
+          len := obj.AsArray.Length;
+          AProgress.Position := 0;
+          AProgress.Max := len;
+          OutputDebugString(PChar('Len = ' + IntToStr(AProgress.Max)));
           Application.ProcessMessages;
-          DownloadFile(Url, fname, ADestination + Title + '\' + SubTitle + '\');
+          for soundI := 0 to len - 1 do
+          begin
+            ID := obj.AsArray[soundI].S['id'];
+            ID := StringReplace(ID, #10, '', [rfReplaceAll]);
+            ID := StringReplace(ID, #13, '', [rfReplaceAll]);
+            Url := 'http://wowimg.zamimg.com/wowsounds/' + ID;
+            if ContainsText(obj.AsArray[soundI].S['type'], 'ogg') then
+              ext := '.ogg'
+            else
+              ext := '.mp3';
+            fname := obj.AsArray[soundI].S['title'] + '_' + ID + ext;
+            fname := StringReplace(fname, #10, '', [rfReplaceAll]);
+            fname := StringReplace(fname, #13, '', [rfReplaceAll]);
+            AProgress.Position := soundI;
+            Application.ProcessMessages;
+            DownloadFile(Url, fname, ADestination + Title + '\' + SubTitle + '\');
+          end;
+        finally
+          obj := nil;
+          AProgress.Position := 0;
         end;
-      finally
-        obj := nil;
-        AProgress.Position := 0;
       end;
     end;
-  end;
 end;
 
 procedure AddWowFiles(AwbWow: TWebBrowser; AWowFiles: ISuperObject);
@@ -139,15 +136,15 @@ var
 begin
   if AwbWow.Document = nil then
     Exit;
-  Title := (AwbWow.Document as IHTMLDocument2).title;
+  Title := (AwbWow.Document as IHTMLDocument2).Title;
   Title := Trim(Copy(Title, 1, Pos(' -', Title)));
   Title := ReplaceStr(Title, ':', ' ');
   Title := ReplaceStr(Title, '"', '_');
   Title := ReplaceStr(Title, '''', '_');
 
-  if Title = ''  then
+  if Title = '' then
     Title := 'UnknownZone';
-  Url := (AwbWow.Document as IHTMLDocument2).url;
+  Url := (AwbWow.Document as IHTMLDocument2).Url;
   ipos := Pos('zone=', Url);
   if ipos > 0 then
   begin
@@ -168,7 +165,7 @@ begin
     else
     begin
       zonetext := node.innerHTML;
-      ipos := Pos('Zone ID:', zonetext); //      Zone ID: 7543<
+      ipos := Pos('Zone ID:', zonetext); // Zone ID: 7543<
       if ipos = 0 then
         ZoneID := 'unknown Id'
       else
@@ -189,50 +186,50 @@ begin
   if node <> nil then
     parentnode := node.parentElement;
   if parentnode <> nil then
-  for I := 0 to (parentnode.children as IHTMLElementCollection).length - 1 do
-  begin
-    script := (parentnode.children as IHTMLElementCollection).item(I, 0) as IHTMLElement;
-    if SameText(script.tagName, 'div') then
-      SubTitle := script.id
+    for I := 0 to (parentnode.children as IHTMLElementCollection).Length - 1 do
+    begin
+      script := (parentnode.children as IHTMLElementCollection).item(I, 0) as IHTMLElement;
+      if SameText(script.tagName, 'div') then
+        SubTitle := script.ID
     else
     if SameText(script.tagName, 'script') and not SameText('zonemusicdiv-soundambience', SubTitle) then
-    begin
-      scripttext := script.innerHTML;
-      ipos := Pos('[{', scripttext);
-      scripttext := Copy(scripttext, ipos, Length(scripttext));
-      ipos := Pos('}]', scripttext);
-      scripttext := Copy(scripttext, 1, ipos + 2);
-      obj := SO(scripttext);
-      obj.SaveTo('C:\Users\User\Documents\Embarcadero\Studio\Projects\tvrain\Bin\Wow_zone.json', True, False);
-      try
-        len := obj.AsArray.Length;
-//        AProgress.Position := 0;
-//        AProgress.Max := Len;
-//        OutputDebugString(PChar('Len = ' + IntToStr(AProgress.Max)));
-        Application.ProcessMessages;
-        for soundI := 0 to len - 1 do
-        begin
-          ID := obj.AsArray[soundI].S['id'];
-          ID := StringReplace(ID, #10, '', [rfReplaceAll]);
-          ID := StringReplace(ID, #13, '', [rfReplaceAll]);
-          Url := 'http://wowimg.zamimg.com/wowsounds/' + ID;
-          if ContainsText(obj.AsArray[soundI].S['type'], 'ogg') then
-            ext := '.ogg'
-          else
-            ext := '.mp3';
-          fname := obj.AsArray[soundI].S['title'] + '_' + ID + ext;
-          fname := StringReplace(fname, #10, '', [rfReplaceAll]);
-          fname := StringReplace(fname, #13, '', [rfReplaceAll]);
-//          AProgress.Position := soundI;
-//          Application.ProcessMessages;
-//          DownloadFile(Url, fname, ADestination + Title + '\' + SubTitle + '\');
+      begin
+        scripttext := script.innerHTML;
+        ipos := Pos('[{', scripttext);
+        scripttext := Copy(scripttext, ipos, Length(scripttext));
+        ipos := Pos('}]', scripttext);
+        scripttext := Copy(scripttext, 1, ipos + 2);
+        obj := SO(scripttext);
+        obj.SaveTo('C:\Users\User\Documents\Embarcadero\Studio\Projects\tvrain\Bin\Wow_zone.json', True, False);
+        try
+          len := obj.AsArray.Length;
+          // AProgress.Position := 0;
+          // AProgress.Max := Len;
+          // OutputDebugString(PChar('Len = ' + IntToStr(AProgress.Max)));
+          Application.ProcessMessages;
+          for soundI := 0 to len - 1 do
+          begin
+            ID := obj.AsArray[soundI].S['id'];
+            ID := StringReplace(ID, #10, '', [rfReplaceAll]);
+            ID := StringReplace(ID, #13, '', [rfReplaceAll]);
+            Url := 'http://wowimg.zamimg.com/wowsounds/' + ID;
+            if ContainsText(obj.AsArray[soundI].S['type'], 'ogg') then
+              ext := '.ogg'
+            else
+              ext := '.mp3';
+            fname := obj.AsArray[soundI].S['title'] + '_' + ID + ext;
+            fname := StringReplace(fname, #10, '', [rfReplaceAll]);
+            fname := StringReplace(fname, #13, '', [rfReplaceAll]);
+            // AProgress.Position := soundI;
+            // Application.ProcessMessages;
+            // DownloadFile(Url, fname, ADestination + Title + '\' + SubTitle + '\');
+          end;
+        finally
+          obj := nil;
+          // AProgress.Position := 0;
         end;
-      finally
-        obj := nil;
-//        AProgress.Position := 0;
       end;
     end;
-  end;
 end;
 
 end.
