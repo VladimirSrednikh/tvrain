@@ -11,12 +11,12 @@ Uses
   SHDocVw, MSHTML,
   superobject, untDownloadCommon;
 
-procedure DownloadWowSound(AwbWow: TWebBrowser; ADestination: string; AProgress: TProgressBar);
+procedure DownloadWowSound(AwbWow: TWebBrowser; const ADestination: string; AProgress: TProgressBar);
 procedure AddWowFiles(AwbWow: TWebBrowser; AWowFiles: ISuperObject);
 
 implementation
 
-procedure DownloadWowSound(AwbWow: TWebBrowser; ADestination: string; AProgress: TProgressBar);
+procedure DownloadWowSound(AwbWow: TWebBrowser; const ADestination: string; AProgress: TProgressBar);
 var
   root, node, parentnode, script: IHTMLElement;
   coll: IHTMLElementCollection;
@@ -200,7 +200,7 @@ begin
         ipos := Pos('}]', scripttext);
         scripttext := Copy(scripttext, 1, ipos + 2);
         obj := SO(scripttext);
-        obj.SaveTo('C:\Users\User\Documents\Embarcadero\Studio\Projects\tvrain\Bin\Wow_zone.json', True, False);
+        //obj.SaveTo('C:\Users\User\Documents\Embarcadero\Studio\Projects\tvrain\Bin\Wow_zone.json', True, False);
         try
           len := obj.AsArray.Length;
           // AProgress.Position := 0;

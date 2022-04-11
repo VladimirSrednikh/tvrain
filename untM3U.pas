@@ -67,8 +67,6 @@ begin
 end;
 
 function TM3UPlayList.FullTrackPath(AIndex: Integer): string;
-//var
-//  Delim: string;
 begin
   if ContainsStr(FTracks[AIndex].URL, '://') then
     Result := FTracks[AIndex].URL
@@ -113,8 +111,6 @@ begin
         SeparartorPos := Pos(',', APLayList[I]);
         FTracks[FTrackCount - 1].Title := Copy(APLayList[I], SeparartorPos + 1, Length(APLayList[I]));
         str := Copy(APLayList[I], Length('#EXTINF:') + 1, SeparartorPos - 1);
-//        str := ReplaceStr(str, ',', FormatSettings.DecimalSeparator);
-//        str := ReplaceStr(str, '.', FormatSettings.DecimalSeparator);
         FTracks[FTrackCount - 1].Duration := StrToFloatDef(str, 0);
         I := I + 1;
         if I < (APLayList.Count - 1) then
@@ -128,10 +124,5 @@ begin
       I := I + 1;
   end;
 end;
-
-//procedure TM3UPlayList.SetTrackCount(const Value: Integer);
-//begin
-//  FTrackCount := Value;
-//end;
 
 end.
